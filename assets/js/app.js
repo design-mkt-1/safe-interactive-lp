@@ -60,6 +60,15 @@
    * Config
    * ------------------------------------------------------------------ */
 
+  // Where the vault's scanner plate sits WITHIN THE FOOTAGE, as a fraction of
+  // the video's own width and height. These are properties of the render, not
+  // of any screen — tune them once against the final clips and they hold
+  // everywhere. Aspect ratios differ, so each cut gets its own point.
+  var SCAN_POINT = {
+    portrait:  { x: 0.500, y: 0.465 },
+    landscape: { x: 0.500, y: 0.460 }
+  };
+
   var HOLD_MS       = 1600;               // how long the user must hold
   var LOCK_MINUTES  = 15;                 // bonus reservation window
   var LOCK_KEY      = 'topbet.vault.lockUntil';
@@ -86,6 +95,7 @@
   var $ = function (id) { return document.getElementById(id); };
 
   var root        = document.documentElement;
+  var stage       = $('stage');
   var clipIdle    = $('clipIdle');
   var clipOpen    = $('clipOpen');
   var clipStill   = $('clipStill');
@@ -147,13 +157,57 @@
     video.load();
   }
 
+  function isLandscape() {
+    return window.matchMedia('(orientation: landscape)').matches
+        && window.innerWidth >= 900;
+  }
+
   function pickSources() {
-    var landscape = window.matchMedia('(orientation: landscape)').matches
-                 && window.innerWidth >= 900;
-    var set = landscape ? SOURCES.landscape : SOURCES.portrait;
+    var set = isLandscape() ? SOURCES.landscape : SOURCES.portrait;
 
     setClip(clipIdle, set.idle);
     setClip(clipOpen, set.open);
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Overlay geometry
+   *
+   * Reproduces what object-fit:cover does to the video, then resolves the
+   * SCAN_POINT fraction into page pixels. This is the whole reason overlays
+   * stay glued to the footage: we never assume the container matches the
+   * video's aspect ratio, we measure the crop and account for it.
+   * ------------------------------------------------------------------ */
+
+  function syncOverlay() {
+    var box = stage.getBoundingClientRect();
+    if (!box.width || !box.height) return;
+
+    var landscape = isLandscape();
+    var video     = clipOpen.classList.contains('is-active') ? clipOpen : clipIdle;
+
+    // Prefer the real intrinsic size once metadata has loaded; fall back to
+    // the nominal ratio so the first paint is not wrong.
+    var aspect = (video.videoWidth && video.videoHeight)
+      ? video.videoWidth / video.videoHeight
+      : (landscape ? 16 / 9 : 9 / 16);
+
+    // cover: scale until both axes are filled, overflow is clipped
+    var w, h;
+    if (box.width / box.height > aspect) {
+      w = box.width;  h = box.width / aspect;
+    } else {
+      h = box.height; w = box.height * aspect;
+    }
+
+    var offsetX = (box.width  - w) / 2;
+    var offsetY = (box.height - h) / 2;
+    var point   = landscape ? SCAN_POINT.landscape : SCAN_POINT.portrait;
+
+    var s = root.style;
+    s.setProperty('--ov-x', (offsetX + point.x * w).toFixed(2) + 'px');
+    s.setProperty('--ov-y', (offsetY + point.y * h).toFixed(2) + 'px');
+    s.setProperty('--ov-w', w.toFixed(2) + 'px');
+    s.setProperty('--ov-h', h.toFixed(2) + 'px');
   }
 
   /* ------------------------------------------------------------------ *
@@ -368,8 +422,13 @@
   function boot() {
     paint();
     pickSources();
+    syncOverlay();
     setRing(0);
     setState('idle');
+
+    // Intrinsic dimensions arrive asynchronously; re-resolve once they do.
+    clipIdle.addEventListener('loadedmetadata', syncOverlay);
+    clipOpen.addEventListener('loadedmetadata', syncOverlay);
 
     if (reduceMotion) {
       clipStill.classList.add('is-active');
@@ -405,8 +464,19 @@
 
   $('toRegister').addEventListener('click', toRegister);
 
-  window.addEventListener('resize', pickSources);
-  window.addEventListener('orientationchange', pickSources);
+  function onViewportChange() {
+    pickSources();
+    syncOverlay();
+  }
+
+  window.addEventListener('resize', onViewportChange);
+  window.addEventListener('orientationchange', onViewportChange);
+
+  // Catches mobile browser chrome collapsing on scroll, which resizes the
+  // stage without always firing a resize event.
+  if (window.ResizeObserver) {
+    new ResizeObserver(syncOverlay).observe(stage);
+  }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);

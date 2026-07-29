@@ -16,12 +16,17 @@
   --tb-mist:       #C9CDD6;
   --tb-mist-dim:   #8A9099;
 
-  /* Scanner target position, as a % of the video frame box.
-     ADJUST THESE TWO once the final render is in — they place the
-     hold-to-scan control directly over the vault's scanner plate. */
-  --scan-x: 50%;
-  --scan-y: 46.5%;
-  --scan-size: clamp(88px, 22vw, 132px);
+  /* Anchor point + rendered video size, published by app.js each frame.
+     The scanner's position in the FOOTAGE is set by SCAN_POINT in app.js;
+     these are just the resolved pixel values. */
+  --ov-x: 50%;
+  --ov-y: 46%;
+  --ov-w: 100vw;
+  --ov-h: 100vh;
+
+  /* Sized against the video rather than the viewport, so the target grows
+     and shrinks with the vault instead of drifting off it. */
+  --scan-size: clamp(72px, calc(var(--ov-w) * 0.17), 190px);
 
   --ease: cubic-bezier(.22,.61,.36,1);
   --shell-max: 460px;
@@ -60,24 +65,17 @@ body {
   z-index: 0;
 }
 
-/* Sized to "cover" the viewport while keeping the clips' 9:16 ratio.
-   Because the box itself matches the footage, % coordinates inside it
-   land on the same pixel of the video at every viewport size. */
+/* A plain full-bleed box. Do NOT try to give this the footage's aspect ratio:
+   aspect-ratio loses to min-width/min-height, the box silently collapses to the
+   viewport, and object-fit then crops the video by an amount that changes with
+   screen size — so any overlay positioned in % of this box drifts off its mark.
+
+   Instead app.js computes the cover geometry and publishes the anchor point as
+   --ov-x / --ov-y (pixels) plus the video's rendered size as --ov-w / --ov-h.
+   Overlays hang off those, so they track the footage exactly at any size. */
 .stage__frame {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  aspect-ratio: 9 / 16;
-  width: 100%;
-  height: auto;
-  min-width: 100%;
-  min-height: 100%;
-}
-
-@media (orientation: landscape) {
-  .stage__frame { aspect-ratio: 16 / 9; }
-  :root { --scan-y: 46%; }
+  inset: 0;
 }
 
 .clip {
@@ -113,8 +111,8 @@ body {
 
 .scanner {
   position: absolute;
-  left: var(--scan-x);
-  top: var(--scan-y);
+  left: var(--ov-x);
+  top: var(--ov-y);
   transform: translate(-50%, -50%);
   width: var(--scan-size);
   height: var(--scan-size);
