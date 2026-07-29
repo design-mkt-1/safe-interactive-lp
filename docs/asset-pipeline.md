@@ -94,31 +94,27 @@ both ends so it cannot drift. With a start image, describe only how the scene
 
 ### Clip 1 — idle loop
 
-`start: ①` · `end: ①` (the same frame) · 5s · 9:16 · audio off
+`start: ① wide` · `end: ① wide` (the same frame) · 5s · 16:9 · 4K · audio off
 
 Using the same frame at both ends makes the loop close on itself. A pulsing
 neon ring is inherently cyclic — it returns to the intensity it started at —
 so the content suits this naturally.
 
 ```
-Locked-off static camera. No camera movement whatsoever, no push in, no drift,
-no zoom, no parallax. The framing is identical in the first and last frame.
+Locked-off static camera. No camera movement at all — no push in, no drift, no
+zoom. The first and last frame are identical.
 
-The shot is a single seamless cycle that ends exactly as it began. The red neon
-ring completes precisely one full pulse: it brightens smoothly to a full glow
-around the middle of the shot, then eases back down and settles at exactly the
-same intensity it started at. The square scanner plate at the centre of the
-door breathes once in and out in the same rhythm, its four corner brackets
-glinting at the peak. Fine dust motes drift lazily and continuously through the
-red light. The thin haze near the floor shifts almost imperceptibly. The red
-reflection on the polished floor swells and fades with the ring.
+One seamless cycle that ends exactly as it begins: the red neon ring brightens
+smoothly to a full glow around the middle of the shot, then eases back down to
+precisely the intensity it started at. The square scanner plate at the centre
+of the door breathes once in the same rhythm. Fine dust motes drift slowly
+through the red light. The red reflection on the floor swells and fades with
+the ring.
 
-Every part of the vault stays absolutely motionless throughout: the door does
-not move, the bolts do not move, the wheel does not turn, the hinges do not
-shift. Nothing opens, nothing changes state.
+The vault itself never moves. The door stays shut, the bolts stay out, the
+wheel does not turn. Nothing opens.
 
-Extremely subtle, quiet, restrained, hypnotic. One continuous shot, no cuts,
-designed to loop perfectly.
+Subtle, quiet, hypnotic. One continuous shot, no cuts, built to loop.
 ```
 
 The locked-off camera is what lets this loop invisibly.
@@ -140,7 +136,7 @@ for half the loop, which reads as subtly wrong even when it is hard to name.
 
 ### Clip 2 — opening
 
-`start: ①` · `end: ③` · 4s · 9:16 · audio off
+`start: ① wide` · `end: ③ wide` · 4s · 16:9 · 4K · audio off
 
 ```
 The heavy locking bolts retract out of the rim and back into the door body in
@@ -156,6 +152,11 @@ out across the polished floor toward the camera. The red neon ring rim-lights
 the outer edge of the swinging door, and the floor reflection blooms from red
 into a pool of gold.
 
+Keep the composition centred: the vault, the open doorway and the gold all
+remain in the middle of the frame, and the swinging door stays within the
+central portion. The extended walls at the far left and right edges stay empty
+and static throughout.
+
 The camera pushes in slowly and steadily, easing to a complete stop in the
 final second so the shot settles into stillness and comes fully to rest.
 
@@ -164,8 +165,12 @@ One continuous shot, no cuts.
 No text, no captions, no subtitles, no watermarks, no UI overlays.
 ```
 
+The centre-hold paragraph is load-bearing. Without it the model treats the
+extra width as space to fill, and anything it moves out of the centre vanishes
+from the mobile crop.
+
 Frame ② is not used for a clip. It exists only as a pose reference if the
-opening needs to be split or re-timed.
+opening ever needs splitting or re-timing.
 
 ## Post-processing
 
