@@ -20,7 +20,7 @@
      ADJUST THESE TWO once the final render is in — they place the
      hold-to-scan control directly over the vault's scanner plate. */
   --scan-x: 50%;
-  --scan-y: 38%;
+  --scan-y: 46.5%;
   --scan-size: clamp(88px, 22vw, 132px);
 
   --ease: cubic-bezier(.22,.61,.36,1);
@@ -122,7 +122,7 @@ body {
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: 16px;
   background: radial-gradient(circle, rgba(217,28,5,.22) 0%, transparent 70%);
   color: var(--tb-red-hot);
   cursor: pointer;
@@ -142,7 +142,6 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
-  transform: rotate(-90deg);   /* start the sweep at 12 o'clock              */
 }
 
 .scanner__track,
@@ -156,8 +155,9 @@ body {
 
 .scanner__progress {
   stroke: var(--tb-red-hot);
-  stroke-dasharray: 289;       /* 2 * PI * r(46) ≈ 289                       */
-  stroke-dashoffset: 289;
+  /* Rounded-rect perimeter: 2*(88-20) + 2*(88-20) + 2*PI*10 ≈ 335 */
+  stroke-dasharray: 335;
+  stroke-dashoffset: 335;
   filter: drop-shadow(0 0 6px var(--tb-red-hot));
 }
 

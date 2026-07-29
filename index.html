@@ -52,9 +52,12 @@
          Tune --scan-x / --scan-y in style.css to match the final render. -->
     <button class="scanner" id="scanner" type="button"
             aria-describedby="scanHint">
+      <!-- Traces the perimeter of the vault's square scanner plate, matching
+           the corner brackets in the artwork. -->
       <svg class="scanner__ring" viewBox="0 0 100 100" aria-hidden="true">
-        <circle class="scanner__track" cx="50" cy="50" r="46"></circle>
-        <circle class="scanner__progress" id="scanProgress" cx="50" cy="50" r="46"></circle>
+        <rect class="scanner__track" x="6" y="6" width="88" height="88" rx="10"></rect>
+        <rect class="scanner__progress" id="scanProgress"
+              x="6" y="6" width="88" height="88" rx="10"></rect>
       </svg>
       <span class="scanner__pad" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"

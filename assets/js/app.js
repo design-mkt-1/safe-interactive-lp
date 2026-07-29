@@ -63,7 +63,7 @@
   var HOLD_MS       = 1600;               // how long the user must hold
   var LOCK_MINUTES  = 15;                 // bonus reservation window
   var LOCK_KEY      = 'topbet.vault.lockUntil';
-  var RING_LENGTH   = 289;                // 2 * PI * 46, matches the SVG
+  var RING_LENGTH   = 335;                // scanner plate perimeter, matches the SVG
 
   // Clip basenames per orientation. Portrait is the primary artwork;
   // landscape is the desktop cut. Each resolves to a .webm and a .mp4 —
