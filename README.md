@@ -56,10 +56,8 @@ moving when it ends, the freeze reads as a stall rather than an arrival.
 ffmpeg -i raw.mp4 -c:v libx264 -crf 23 -pix_fmt yuv420p \
        -movflags +faststart -an vault-open-9x16.mp4
 
-# seamless idle loop (forward + reversed, so the loop point is invisible)
-ffmpeg -i idle-raw.mp4 -filter_complex \
-  "[0]split[a][b];[b]reverse[r];[a][r]concat=n=2:v=1" \
-  -c:v libx264 -crf 23 -pix_fmt yuv420p -an vault-idle-9x16.mp4
+# the idle clip is generated with the same start and end frame so it already
+# loops; see docs/asset-pipeline.md for the crossfade fix if a seam remains
 
 # posters
 ffmpeg -i vault-idle-9x16.mp4 -frames:v 1 -q:v 3 poster-idle.jpg

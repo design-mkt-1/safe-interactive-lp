@@ -59,29 +59,49 @@ both ends so it cannot drift. With a start image, describe only how the scene
 
 ### Clip 1 — idle loop
 
-`start: ①` · no end frame · 5s · 9:16 · audio off
+`start: ①` · `end: ①` (the same frame) · 5s · 9:16 · audio off
+
+Using the same frame at both ends makes the loop close on itself. A pulsing
+neon ring is inherently cyclic — it returns to the intensity it started at —
+so the content suits this naturally.
 
 ```
 Locked-off static camera. No camera movement whatsoever, no push in, no drift,
-no zoom.
+no zoom, no parallax. The framing is identical in the first and last frame.
 
-The red neon ring pulses slowly, brightening to a full glow and easing back
-down once across the shot. The square scanner plate at the centre of the door
-breathes faintly in and out of intensity, and its four corner brackets glint.
-Fine dust motes drift lazily through the red light. The thin haze near the
-floor shifts almost imperceptibly. The red reflection on the polished floor
-ripples very slightly.
+The shot is a single seamless cycle that ends exactly as it began. The red neon
+ring completes precisely one full pulse: it brightens smoothly to a full glow
+around the middle of the shot, then eases back down and settles at exactly the
+same intensity it started at. The square scanner plate at the centre of the
+door breathes once in and out in the same rhythm, its four corner brackets
+glinting at the peak. Fine dust motes drift lazily and continuously through the
+red light. The thin haze near the floor shifts almost imperceptibly. The red
+reflection on the polished floor swells and fades with the ring.
 
-Every part of the vault stays absolutely motionless: the door does not move,
-the bolts do not move, the wheel does not turn, the hinges do not shift.
-Nothing opens.
+Every part of the vault stays absolutely motionless throughout: the door does
+not move, the bolts do not move, the wheel does not turn, the hinges do not
+shift. Nothing opens, nothing changes state.
 
-Extremely subtle, quiet, restrained, hypnotic. One continuous shot, no cuts.
-
-No text, no captions, no subtitles, no watermarks, no UI overlays.
+Extremely subtle, quiet, restrained, hypnotic. One continuous shot, no cuts,
+designed to loop perfectly.
 ```
 
 The locked-off camera is what lets this loop invisibly.
+
+Kling treats `end_image` as a destination it steers toward, not a pixel-exact
+target, so expect it to land close rather than perfect. If a seam remains,
+crossfade the tail into the head:
+
+```bash
+ffmpeg -i idle-raw.mp4 -filter_complex \
+  "[0]split[a][b];[a]trim=0:4.7,setpts=PTS-STARTPTS[main];\
+   [b]trim=4.7:5,setpts=PTS-STARTPTS[tail];\
+   [main][tail]xfade=transition=fade:duration=0.3:offset=4.4" \
+  -c:v libx264 -crf 23 -pix_fmt yuv420p -an vault-idle-9x16.mp4
+```
+
+Prefer this over a boomerang: reversing the clip runs dust and smoke backwards
+for half the loop, which reads as subtly wrong even when it is hard to name.
 
 ### Clip 2 — opening
 
