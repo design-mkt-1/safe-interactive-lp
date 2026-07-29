@@ -221,7 +221,14 @@ body {
   filter: drop-shadow(0 0 8px var(--tb-red-hot));
   overflow: hidden;
 }
-.scanner__pad svg { width: 100%; height: auto; display: block; }
+/* The glyph's drawn mass sits low in its own viewBox, so it reads as offset
+   even though the box is perfectly centred on the plate. Nudge it optically. */
+.scanner__pad svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  transform: translateY(-7%);
+}
 
 /* Scan line sweeping across the fingerprint. Runs continuously while idle,
    then speeds up under the finger so the hold feels like it is doing work. */

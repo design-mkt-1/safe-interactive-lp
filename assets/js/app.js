@@ -64,20 +64,24 @@
   // the video's own width and height. These are properties of the render, not
   // of any screen — tune them once against the final clips and they hold
   // everywhere. Aspect ratios differ, so each cut gets its own point.
-  // Measured from the delivered footage: the ring centres on x=983, y=594 of
-  // the 1920x1080 master, with a 348px diameter. The portrait cut is cropped
-  // 608px wide starting at x=679 — centred on the ring rather than on the
-  // frame — which is why its x lands on 0.500.
+  // Measured off the delivered footage against a coordinate grid: the ring
+  // and the scanner plate share a centre at x=969, y=531 of the 1920x1080
+  // master, with a ring diameter of ~404px. The portrait cut is cropped 608px
+  // wide from x=679, which puts that centre at 0.477 of the crop.
+  //
+  // Do not derive these from a red-pixel centroid: the floor reflection and
+  // the equipment lights drag it badly off, and a search window clipped to
+  // avoid them just returns its own boundaries.
   var SCAN_POINT = {
-    portrait:  { x: 0.500, y: 0.550 },
-    landscape: { x: 0.512, y: 0.550 }
+    portrait:  { x: 0.477, y: 0.492 },
+    landscape: { x: 0.505, y: 0.492 }
   };
 
   // Same coordinate system; `d` is the ring's diameter as a fraction of the
   // video's WIDTH, so it differs between the two cuts of the same footage.
   var RING_POINT = {
-    portrait:  { x: 0.500, y: 0.550, d: 0.572 },
-    landscape: { x: 0.512, y: 0.550, d: 0.181 }
+    portrait:  { x: 0.477, y: 0.492, d: 0.664 },
+    landscape: { x: 0.505, y: 0.492, d: 0.210 }
   };
 
   // 'video'  — idle state plays vault-idle-*; 'still' — idle state is a static
