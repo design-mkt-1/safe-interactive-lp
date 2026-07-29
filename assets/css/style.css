@@ -85,7 +85,9 @@ body {
   height: 100%;
   object-fit: cover;
   opacity: 0;
-  transition: opacity .45s var(--ease);
+  /* Duration is published by app.js as CROSSFADE_MS so the blend and the
+     delayed play() cannot drift apart. */
+  transition: opacity var(--clip-fade, 420ms) var(--ease);
   pointer-events: none;
 }
 

@@ -29,9 +29,12 @@
       <source type="video/webm"><source type="video/mp4">
     </video>
 
+    <!-- Poster is the CLOSED vault, not the open one: this element is visible
+         during the crossfade, before the clip plays. Its poster must match
+         what it opens on, or the blend flashes the ending. -->
     <video class="clip" id="clipOpen"
            muted playsinline preload="auto"
-           poster="assets/img/poster-open.jpg"
+           poster="assets/img/poster-idle.jpg"
            aria-hidden="true">
       <source type="video/webm"><source type="video/mp4">
     </video>

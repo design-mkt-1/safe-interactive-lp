@@ -86,6 +86,11 @@
   // breaking. A still idle loops perfectly and costs no bandwidth.
   var IDLE_MODE = 'auto';
 
+  // The visitor taps at an arbitrary point in the idle loop, so the opening
+  // clip's first frame can never match what is on screen. This blend covers
+  // the discontinuity. CSS reads it from --clip-fade so the two cannot drift.
+  var CROSSFADE_MS  = 420;
+
   var HOLD_MS       = 1600;               // how long the user must hold
   var LOCK_MINUTES  = 15;                 // bonus reservation window
   var LOCK_KEY      = 'topbet.vault.lockUntil';
@@ -311,11 +316,18 @@
 
     if (reduceMotion) { reveal(); return; }
 
+    // Park the opening clip on its first frame and start the blend. Holding it
+    // paused through the fade matters: if it played immediately, the bolts and
+    // the start of the door's swing would happen while the layer is still
+    // semi-transparent, and the visitor would simply miss them.
+    try { clipOpen.currentTime = 0; } catch (err) { /* not seekable yet */ }
     show(clipOpen);
-    clipOpen.currentTime = 0;
 
-    var go = clipOpen.play();
-    if (go && go.catch) go.catch(reveal);
+    window.setTimeout(function () {
+      clipIdle.pause();                      // nothing behind it now
+      var go = clipOpen.play();
+      if (go && go.catch) go.catch(reveal);
+    }, CROSSFADE_MS);
 
     clipOpen.addEventListener('ended', function () {
       clipOpen.pause();
@@ -443,6 +455,7 @@
 
   function boot() {
     paint();
+    root.style.setProperty('--clip-fade', CROSSFADE_MS + 'ms');
     pickSources();
     syncOverlay();
     setRing(0);

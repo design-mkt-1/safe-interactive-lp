@@ -46,6 +46,23 @@ assets/img/
 The opening clip must come to rest on its last frame. If the camera is still
 moving when it ends, the freeze reads as a stall rather than an arrival.
 
+### The idle → opening transition
+
+The visitor completes the hold at an arbitrary point in the idle loop, so the
+opening clip's first frame can never match what is on screen. A 420ms opacity
+crossfade covers the discontinuity, which means **the opening clip does not
+need to start on the idle clip's last frame** — it only needs to start on the
+same *set*, at the same camera position.
+
+The opening clip is held paused on frame zero for the duration of the blend
+and only plays once it is fully opaque. Playing it immediately would spend the
+first 420ms of the door unlocking behind a semi-transparent layer. `app.js`
+publishes `CROSSFADE_MS` as `--clip-fade` so the CSS transition and the delayed
+`play()` cannot drift apart.
+
+For the same reason `#clipOpen`'s `poster` is the **closed** vault, not the
+open one: that element is visible during the blend, before playback starts.
+
 `app.js` picks portrait or landscape sources at runtime via `matchMedia`
 (`<source media>` inside `<video>` is not reliably honoured across browsers).
 
