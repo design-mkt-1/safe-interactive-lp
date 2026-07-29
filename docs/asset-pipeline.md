@@ -4,6 +4,39 @@ How the two video clips in `assets/video/` are produced. The files currently
 committed are flat-colour placeholders; this document is how the real ones get
 made.
 
+## Format strategy — 16:9 is the master
+
+Both clips are generated **once, in 16:9 at 4K**, and the mobile 9:16 is cut
+from the centre. Mobile is therefore a literal crop of desktop, so the two can
+never drift apart — and it halves the generation work.
+
+This only holds at 4K. The numbers:
+
+| Master            | Centre 9:16 crop | Verdict for a phone (~1170px @3×) |
+| ----------------- | ---------------- | --------------------------------- |
+| 1080p (1920×1080) | 608×1080         | too soft, roughly 2× upscaled     |
+| 4K (3840×2160)    | 1215×2160        | sharp                             |
+
+The frames are extended from the approved 9:16 originals rather than
+regenerated, so the vault, ring, bolts and wall seams are preserved rather
+than reinvented. Extend **at 100% scale, centred, horizontally only** — then
+the centre of the wide frame is the portrait frame, and cropping the finished
+video recovers the approved composition exactly.
+
+Both frames must share the *same* extension. Two independent outpaints invent
+two different backgrounds, and the clip then appears to cut between different
+rooms. Derive the open frame from the already-extended closed frame.
+
+```bash
+# cut mobile from the 16:9 master
+ffmpeg -i vault-open-16x9.mp4 -vf "crop=ih*9/16:ih" \
+       -c:v libx264 -crf 23 -pix_fmt yuv420p -an vault-open-9x16.mp4
+```
+
+Because the door swings left, the opening prompt must explicitly hold the
+action in the centre. Anything the model pushes to the edges is invisible on
+mobile, and anything it moves out of the centre vanishes from the crop.
+
 ## Structure
 
 Two clips, not a single cut:
@@ -34,14 +67,16 @@ worth watching, and it keeps the interaction responsive to a partial hold.
 
 Generated with Higgsfield. Job IDs, in sequence:
 
-| Frame | Job ID     | State                                            |
-| ----- | ---------- | ------------------------------------------------ |
-| ①     | `56dd003a` | Closed vault, red neon horseshoe ring            |
-| ②     | `d01dd830` | Cracked open, gold seam escaping (intermediate)  |
-| ③     | *approved* | Fully open, gold bullion spilling over threshold |
+| Frame  | Job ID     | Ratio | State                                            |
+| ------ | ---------- | ----- | ------------------------------------------------ |
+| ①      | `56dd003a` | 9:16  | Closed vault, red neon horseshoe ring            |
+| ②      | `d01dd830` | 9:16  | Cracked open, gold seam escaping (unused)        |
+| ③      | —          | 9:16  | Fully open, gold bullion over the threshold      |
+| ① wide | `3949172c` | 16:9  | ① extended left and right — **the master frame** |
+| ③ wide | —          | 16:9  | Open + gold, derived from `3949172c`             |
 
-Frame ③ was produced image-to-image from an earlier open-vault render, adding
-the ingot pile while holding the door, ring, smoke and floor reflection fixed.
+The two wide frames are what the clips are generated from. Frame ② is unused:
+it was a pose reference for an earlier three-clip structure.
 
 > **Model substitution:** Higgsfield's MCP has served `nano_banana_2` for
 > explicit `nano_banana_pro` requests, and `nano_banana_flash` for
