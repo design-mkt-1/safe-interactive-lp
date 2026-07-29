@@ -6,6 +6,15 @@ open, and reveals the welcome bonus above a registration form.
 
 Static HTML/CSS/vanilla JS. No build step, no dependencies.
 
+**Live:** https://design-mkt-1.github.io/safe-interactive-lp/
+
+Served by GitHub Pages from this branch's root. Pages rebuilds on every push;
+it does **not** rebuild when you change the Pages settings, so if the site is
+missing right after enabling it, push any commit to trigger the first build.
+Watch progress under the repo's Actions tab as `pages-build-deployment`.
+
+Locally:
+
 ```
 python3 -m http.server 8000
 # open http://localhost:8000
