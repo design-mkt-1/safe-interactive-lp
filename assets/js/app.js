@@ -69,6 +69,19 @@
     landscape: { x: 0.500, y: 0.460 }
   };
 
+  // The vault's neon ring, same coordinate system. `d` is the ring's diameter
+  // as a fraction of the video's WIDTH. Tune against the final render.
+  var RING_POINT = {
+    portrait:  { x: 0.500, y: 0.440, d: 0.66 },
+    landscape: { x: 0.500, y: 0.440, d: 0.30 }
+  };
+
+  // 'video'  — idle state plays vault-idle-*; 'still' — idle state is a static
+  // poster and the motion comes from CSS. 'auto' picks 'still' when the idle
+  // clip is missing or fails to load, so a missing file degrades rather than
+  // breaking. A still idle loops perfectly and costs no bandwidth.
+  var IDLE_MODE = 'auto';
+
   var HOLD_MS       = 1600;               // how long the user must hold
   var LOCK_MINUTES  = 15;                 // bonus reservation window
   var LOCK_KEY      = 'topbet.vault.lockUntil';
@@ -203,11 +216,16 @@
     var offsetY = (box.height - h) / 2;
     var point   = landscape ? SCAN_POINT.landscape : SCAN_POINT.portrait;
 
+    var ring = landscape ? RING_POINT.landscape : RING_POINT.portrait;
+
     var s = root.style;
     s.setProperty('--ov-x', (offsetX + point.x * w).toFixed(2) + 'px');
     s.setProperty('--ov-y', (offsetY + point.y * h).toFixed(2) + 'px');
     s.setProperty('--ov-w', w.toFixed(2) + 'px');
     s.setProperty('--ov-h', h.toFixed(2) + 'px');
+    s.setProperty('--ring-x', (offsetX + ring.x * w).toFixed(2) + 'px');
+    s.setProperty('--ring-y', (offsetY + ring.y * h).toFixed(2) + 'px');
+    s.setProperty('--ring-d', (ring.d * w).toFixed(2) + 'px');
   }
 
   /* ------------------------------------------------------------------ *
@@ -435,13 +453,42 @@
       return;
     }
 
+    if (IDLE_MODE === 'still') { useStillIdle(); return; }
+
     var go = clipIdle.play();
     if (go && go.catch) {
       go.catch(function () {
-        // Muted autoplay refused (iOS Low Power Mode is the usual cause).
-        tapStart.hidden = false;
+        // Autoplay refusal (iOS Low Power Mode) is recoverable with a tap;
+        // an unplayable clip is not. The readiness check below settles which.
+        if (clipIdle.readyState >= 2) tapStart.hidden = false;
       });
     }
+
+    // A <video> with <source> children fires `error` on the sources, not on
+    // itself, so there is no single reliable event for "this clip will never
+    // play". Give it a deadline and judge by readiness instead — this covers
+    // a missing file, a network failure and an unsupported codec alike.
+    window.setTimeout(function () {
+      if (IDLE_MODE === 'auto' && clipIdle.readyState < 2) useStillIdle();
+    }, 2500);
+  }
+
+  // Drop the idle clip's sources and let its poster stand in. A <video> with
+  // no playable source renders its poster, and object-fit applies to that too,
+  // so the framing is identical to the clip it replaces — the CSS effects then
+  // carry the motion.
+  function useStillIdle() {
+    if (root.classList.contains('idle-still')) return;
+    root.classList.add('idle-still');
+
+    var sources = clipIdle.querySelectorAll('source');
+    for (var i = 0; i < sources.length; i++) sources[i].removeAttribute('src');
+    clipIdle.removeAttribute('src');
+    clipIdle.load();
+    clipIdle.classList.add('is-active');
+
+    tapStart.hidden = true;
+    syncOverlay();
   }
 
   tapStart.addEventListener('click', function () {

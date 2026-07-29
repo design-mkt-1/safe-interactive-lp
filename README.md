@@ -67,22 +67,58 @@ ffmpeg -sseof -0.1 -i vault-open-9x16.mp4 -update 1 -frames:v 1 -q:v 3 poster-op
 Strip audio (`-an`) — the page is muted, and an audio track can block
 autoplay on iOS. Aim for under ~1.5 MB per clip.
 
-## Aligning the scanner target
+## Idle state: clip or still
 
-The hold-to-scan control must sit exactly over the vault's scanner plate. It
-is positioned in percentages of the video frame, set in `assets/css/style.css`:
+`IDLE_MODE` in `assets/js/app.js`:
 
-```css
---scan-x: 50%;
---scan-y: 46.5%;   /* portrait */
+| Value    | Behaviour                                                        |
+| -------- | ---------------------------------------------------------------- |
+| `'auto'` | Play the idle clip; fall back to the still if it cannot play      |
+| `'video'`| Always the clip                                                   |
+| `'still'`| Always the still, with CSS carrying the motion                    |
+
+A still idle loops perfectly by definition, costs no bandwidth, and its pulse
+can **react to the user** — the ring and scan line accelerate from 2.8s to
+0.55s while the visitor holds, which no pre-rendered loop can do. The CSS
+pulse is suppressed when the idle is a clip, so the two never beat against
+each other.
+
+The fallback is decided by a readiness deadline rather than an `error` event:
+a `<video>` with `<source>` children fires `error` on the sources, not on
+itself, so there is no single reliable event for "this will never play".
+
+## Aligning overlays to the footage
+
+Overlay positions are expressed as fractions of **the video**, in
+`assets/js/app.js` — properties of the render, not of any screen:
+
+```js
+var SCAN_POINT = { portrait: { x: 0.500, y: 0.465 }, … };  // scanner plate
+var RING_POINT = { portrait: { x: 0.500, y: 0.440, d: 0.66 }, … };  // neon ring
 ```
 
-with a landscape override in the `@media (orientation: landscape)` block.
-Adjust both once the final renders are in.
+`syncOverlay()` reproduces what `object-fit: cover` does — computes the
+rendered video size, measures how much is cropped off each edge — and resolves
+those fractions into `--ov-x`/`--ov-y`/`--ring-x`/`--ring-y`/`--ring-d`.
+Overlays are also *sized* from `--ov-w`, so they scale with the vault rather
+than the viewport.
 
-Positioning works because `.stage__frame` carries the clips' aspect ratio and
-is sized to cover the viewport, so percentage coordinates inside it land on
-the same point of the footage at every screen size.
+> Do **not** give `.stage__frame` the footage's aspect ratio and position
+> overlays as a percentage of it. `aspect-ratio` loses to `min-width`/
+> `min-height`, the box collapses to the viewport, and `object-fit` then crops
+> by an amount that varies with screen size. That was a real bug: on a 390×844
+> iPhone the box measured 0.4621 against the video's 0.5625, so the target sat
+> off the plate.
+
+Verify with:
+
+```bash
+python3 -m http.server 8000 &
+node tools/check-overlay-alignment.js
+```
+
+It reports the anchor's position in video coordinates across 16 viewports from
+320×568 to 3440×1440. Worst drift should stay near 0.002%, which is rounding.
 
 ## Copy and localisation
 

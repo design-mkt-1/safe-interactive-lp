@@ -106,6 +106,58 @@ body {
 }
 
 /* ==========================================================================
+   Vault FX — live glow over the baked neon ring
+
+   Anchored to the footage by the same cover geometry as the scanner, so it
+   holds position at any viewport. This is what carries the idle motion when
+   the idle state is a still image rather than a clip: a CSS pulse loops
+   perfectly, costs no bandwidth, and can respond to the user.
+   ========================================================================== */
+
+.vaultfx {
+  position: absolute;
+  left: var(--ring-x);
+  top: var(--ring-y);
+  width: var(--ring-d);
+  height: var(--ring-d);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+
+  border: max(2px, calc(var(--ring-d) * 0.012)) solid rgba(255, 92, 64, .9);
+  box-shadow:
+    0 0 calc(var(--ring-d) * .10) calc(var(--ring-d) * .012) rgba(255, 59, 33, .75),
+    inset 0 0 calc(var(--ring-d) * .07) rgba(255, 59, 33, .55);
+
+  /* Adds light to the ring already in the frame rather than covering it. */
+  mix-blend-mode: plus-lighter;
+}
+
+/* Only breathes while the vault is shut and waiting — and only when the idle
+   state is a still. If the idle clip carries its own pulse, a CSS pulse on top
+   would beat against it. */
+.idle-still[data-state="idle"] .vaultfx,
+.idle-still[data-state="scanning"] .vaultfx {
+  animation: ringPulse 2.8s ease-in-out infinite;
+}
+
+@keyframes ringPulse {
+  0%, 100% { opacity: .22; filter: brightness(.85); }
+  50%      { opacity: .85; filter: brightness(1.35); }
+}
+
+/* Holding accelerates the pulse — the vault reacting to the user is the one
+   thing a pre-rendered loop cannot do. */
+.idle-still[data-state="scanning"] .vaultfx { animation-duration: .55s; }
+
+/* Once it opens, the footage takes over. */
+[data-state="unlocking"] .vaultfx,
+[data-state="revealing"] .vaultfx,
+[data-state="register"]  .vaultfx { animation: none; opacity: 0; }
+
+/* ==========================================================================
    Scanner — hold-to-unlock target
    ========================================================================== */
 
@@ -160,12 +212,61 @@ body {
 }
 
 .scanner__pad {
+  position: relative;
   width: 46%;
   color: #fff;
   opacity: .9;
   filter: drop-shadow(0 0 8px var(--tb-red-hot));
+  overflow: hidden;
 }
 .scanner__pad svg { width: 100%; height: auto; display: block; }
+
+/* Scan line sweeping across the fingerprint. Runs continuously while idle,
+   then speeds up under the finger so the hold feels like it is doing work. */
+.scanner__pad::after {
+  content: "";
+  position: absolute;
+  left: -12%;
+  right: -12%;
+  height: 22%;
+  top: -22%;
+  background: linear-gradient(to bottom,
+              transparent, rgba(255,120,90,.95), transparent);
+  filter: blur(1px);
+  animation: scanSweep 2.8s ease-in-out infinite;
+}
+
+@keyframes scanSweep {
+  0%   { top: -22%; opacity: 0; }
+  12%  { opacity: 1; }
+  50%  { top: 100%; opacity: 1; }
+  62%  { opacity: 0; }
+  100% { top: 100%; opacity: 0; }
+}
+
+[data-state="scanning"] .scanner__pad::after { animation-duration: .55s; }
+
+/* Ripple radiating out from the plate on each beat. */
+.scanner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1.5px solid rgba(255, 92, 64, .55);
+  animation: ripple 2.8s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes ripple {
+  0%   { transform: scale(.82); opacity: 0; }
+  25%  { opacity: .75; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+
+[data-state="scanning"] .scanner::after { animation-duration: .55s; }
+
+[data-state="unlocking"] .scanner::after,
+[data-state="revealing"] .scanner::after { animation: none; opacity: 0; }
 
 /* Idle attract-loop. Suppressed while the user is actually holding. */
 [data-state="idle"] .scanner { animation: breathe 2.6s var(--ease) infinite; }

@@ -41,8 +41,13 @@
     <img class="clip clip--still" id="clipStill"
          src="assets/img/poster-open.jpg" alt="" aria-hidden="true">
 
+    <!-- Live glow drawn over the vault's baked neon ring. Anchored to the
+         footage by the same cover geometry as the scanner, so it holds at
+         any viewport. Carries the idle pulse when the idle state is a still. -->
+    <span class="vaultfx" id="vaultFx" aria-hidden="true"></span>
+
     <!-- Hold-to-scan target. Sits over the vault's scanner plate.
-         Tune --scan-x / --scan-y in style.css to match the final render. -->
+         Position comes from SCAN_POINT in app.js, resolved to --ov-x/--ov-y. -->
     <button class="scanner" id="scanner" type="button"
             aria-describedby="scanHint">
       <!-- Traces the perimeter of the vault's square scanner plate, matching
