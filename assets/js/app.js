@@ -64,16 +64,20 @@
   // the video's own width and height. These are properties of the render, not
   // of any screen — tune them once against the final clips and they hold
   // everywhere. Aspect ratios differ, so each cut gets its own point.
+  // Measured from the delivered footage: the ring centres on x=983, y=594 of
+  // the 1920x1080 master, with a 348px diameter. The portrait cut is cropped
+  // 608px wide starting at x=679 — centred on the ring rather than on the
+  // frame — which is why its x lands on 0.500.
   var SCAN_POINT = {
-    portrait:  { x: 0.500, y: 0.465 },
-    landscape: { x: 0.500, y: 0.460 }
+    portrait:  { x: 0.500, y: 0.550 },
+    landscape: { x: 0.512, y: 0.550 }
   };
 
-  // The vault's neon ring, same coordinate system. `d` is the ring's diameter
-  // as a fraction of the video's WIDTH. Tune against the final render.
+  // Same coordinate system; `d` is the ring's diameter as a fraction of the
+  // video's WIDTH, so it differs between the two cuts of the same footage.
   var RING_POINT = {
-    portrait:  { x: 0.500, y: 0.440, d: 0.66 },
-    landscape: { x: 0.500, y: 0.440, d: 0.30 }
+    portrait:  { x: 0.500, y: 0.550, d: 0.572 },
+    landscape: { x: 0.512, y: 0.550, d: 0.181 }
   };
 
   // 'video'  — idle state plays vault-idle-*; 'still' — idle state is a static
