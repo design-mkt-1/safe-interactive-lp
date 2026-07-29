@@ -65,19 +65,17 @@
   var LOCK_KEY      = 'topbet.vault.lockUntil';
   var RING_LENGTH   = 335;                // scanner plate perimeter, matches the SVG
 
-  // Clip basenames per orientation. Portrait is the primary artwork;
-  // landscape is the desktop cut. Each resolves to a .webm and a .mp4 —
-  // the browser picks via the <source> elements.
+  // Two clips: a seamless idle loop, and the opening animation which plays
+  // once and holds on its final frame. Each basename resolves to a .webm and
+  // a .mp4 — the browser picks via the <source> elements.
   var SOURCES = {
     portrait: {
-      idle:   'assets/video/vault-idle-9x16',
-      unlock: 'assets/video/vault-unlock-9x16',
-      open:   'assets/video/vault-open-9x16'
+      idle: 'assets/video/vault-idle-9x16',
+      open: 'assets/video/vault-open-9x16'
     },
     landscape: {
-      idle:   'assets/video/vault-idle-16x9',
-      unlock: 'assets/video/vault-unlock-16x9',
-      open:   'assets/video/vault-open-16x9'
+      idle: 'assets/video/vault-idle-16x9',
+      open: 'assets/video/vault-open-16x9'
     }
   };
 
@@ -89,7 +87,6 @@
 
   var root        = document.documentElement;
   var clipIdle    = $('clipIdle');
-  var clipUnlock  = $('clipUnlock');
   var clipOpen    = $('clipOpen');
   var clipStill   = $('clipStill');
   var scanner     = $('scanner');
@@ -155,9 +152,8 @@
                  && window.innerWidth >= 900;
     var set = landscape ? SOURCES.landscape : SOURCES.portrait;
 
-    setClip(clipIdle,   set.idle);
-    setClip(clipUnlock, set.unlock);
-    setClip(clipOpen,   set.open);
+    setClip(clipIdle, set.idle);
+    setClip(clipOpen, set.open);
   }
 
   /* ------------------------------------------------------------------ *
@@ -172,7 +168,7 @@
   }
 
   function show(clip) {
-    [clipIdle, clipUnlock, clipOpen].forEach(function (c) {
+    [clipIdle, clipOpen].forEach(function (c) {
       c.classList.toggle('is-active', c === clip);
     });
   }
@@ -230,22 +226,15 @@
    * Unlock -> reveal
    * ------------------------------------------------------------------ */
 
+  // The opening animation runs once and then holds on its last frame for the
+  // rest of the visit. There is no way back to the idle loop short of a reload
+  // — the vault is open, and re-locking it would undo the payoff.
   function unlock() {
     setState('unlocking');
     setRing(1);
 
     if (reduceMotion) { reveal(); return; }
 
-    show(clipUnlock);
-    clipUnlock.currentTime = 0;
-
-    var go = clipUnlock.play();
-    if (go && go.catch) go.catch(reveal);
-
-    clipUnlock.addEventListener('ended', openVault, { once: true });
-  }
-
-  function openVault() {
     show(clipOpen);
     clipOpen.currentTime = 0;
 

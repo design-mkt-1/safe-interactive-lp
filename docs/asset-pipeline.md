@@ -1,194 +1,150 @@
 # Asset pipeline — vault footage
 
-How the three video clips in `assets/video/` are produced. The files currently
+How the two video clips in `assets/video/` are produced. The files currently
 committed are flat-colour placeholders; this document is how the real ones get
 made.
 
-## Reference
+## Structure
 
-The concept comes from a 10s reference video (1280×720, 24fps) supplied by the
-client. Beat map:
+Two clips, not a single cut:
 
-| Time     | Beat                                                                |
-| -------- | ------------------------------------------------------------------- |
-| 0–2.5s   | Closed vault, neon ring, fingerprint scanner, "hold to scan"        |
-| 2.5–4.0s | Laser sweeps the fingerprint plate                                  |
-| 4.0–5.0s | "Access granted", bolts retract                                     |
-| 5.0–7.0s | Door swings open, golden light and volumetric smoke flood out       |
-| 7.0–8.5s | Bonus reveal + device-lock countdown                                |
-| 8.5–10s  | Camera tilts down, registration form rises                          |
+1. **Idle loop** — the closed vault, red neon breathing. Loops indefinitely
+   while the page waits for the visitor.
+2. **Opening** — 4 seconds: bolts retract, the door swings open, the gold is
+   revealed. Plays once on a completed hold, then **holds on its last frame**
+   for the rest of the visit. Only a reload returns to idle.
 
-The Topbet version is red rather than the reference's cyan, and **carries no
-text at all** — every word on screen is HTML. That keeps the footage reusable
-across campaigns and locales, and keeps typography crisp instead of
-AI-rendered.
+The scan feedback deliberately lives in HTML, not in the footage: the progress
+outline traces the scanner plate while the visitor holds. That frees the whole
+4 seconds of the opening clip for the mechanical reveal, which is the part
+worth watching, and it keeps the interaction responsive to a partial hold.
 
 ## Decisions
 
-1. **No text in the video.** Ever. See above.
-2. **Generic reveal** — gold light with clean negative space in the middle,
-   which is where the HTML offer card lands.
-3. **Three interaction-driven clips**, not one continuous cut, so the page can
-   genuinely wait on the user in the idle state.
-4. **Frame chaining.** Higgsfield's `kling3_0_turbo` accepts a start frame
-   only — it has no end-frame input. So continuity comes from extracting each
-   rendered clip's true last frame and feeding it to the next generation.
-   (Krea's `kling/kling-3.0` does support `start_image` + `end_image` if that
-   route is preferred.)
-5. **Mobile 9:16 is primary.** Desktop 16:9 is a second pass.
+1. **No text in the video.** Ever. Every word on screen is HTML, which keeps
+   the footage reusable across locales and campaigns and keeps typography
+   crisp rather than AI-rendered.
+2. **Two clips, not three.** An earlier plan split unlock and open; merging
+   them removes a crossfade and a failure point.
+3. **The opening clip must come to rest.** If the camera is still moving on
+   the last frame, the freeze reads as a stall rather than an arrival.
+4. **Mobile 9:16 is primary.** Desktop 16:9 is a second pass.
 
-## Stage 1 — hero frames (Nano Banana Pro, 2K, 9:16)
+## Approved frames
 
-Three frames, generated for visual approval and to anchor the clips.
+Generated with Higgsfield. Job IDs, in sequence:
 
-> **Note:** Higgsfield's MCP has been observed serving `nano_banana_2` for
-> explicit `nano_banana_pro` requests. Check the `model` field in the response.
+| Frame | Job ID     | State                                            |
+| ----- | ---------- | ------------------------------------------------ |
+| ①     | `56dd003a` | Closed vault, red neon horseshoe ring            |
+| ②     | `d01dd830` | Cracked open, gold seam escaping (intermediate)  |
+| ③     | *approved* | Fully open, gold bullion spilling over threshold |
 
-### Shared style spine
+Frame ③ was produced image-to-image from an earlier open-vault render, adding
+the ingot pile while holding the door, ring, smoke and floor reflection fixed.
 
-Appended to every frame prompt. The no-text clause is emphatic because image
-models reliably invent signage otherwise.
+> **Model substitution:** Higgsfield's MCP has served `nano_banana_2` for
+> explicit `nano_banana_pro` requests, and `nano_banana_flash` for
+> image-to-image calls. Check the `model` field in the response rather than
+> assuming the requested tier.
 
-```
-Photorealistic cinematic 3D product render, Octane and Redshift quality,
-ray-traced reflections, volumetric haze and floating dust motes, shallow depth
-of field, dramatic chiaroscuro lighting, ultra-detailed metal microsurface,
-subtle film grain, 8K.
+Note the media role for image-to-image is `image`, despite the catalogue
+advertising `image_references` for these models.
 
-Absolutely no text, no typography, no letters, no numbers, no words, no
-signage, no labels, no UI elements, no logos, no watermarks anywhere in the
-image.
-```
+## Clip prompts (Kling 3.0)
 
-### Composition rule
+Use **start + end frames** where the tool supports them — it pins each clip at
+both ends so it cannot drift. With a start image, describe only how the scene
+**evolves**; re-describing what the frame already shows causes drift.
 
-The vault occupies the upper ~60% of the vertical frame. The lower ~40% stays
-dark and uncluttered — that is where the registration card sits on mobile.
+### Clip 1 — idle loop
 
-### Colour direction
+`start: ①` · no end frame · 5s · 9:16 · audio off
 
 ```
-The scene is lit almost entirely in one signature brand red: a hot vermilion
-scarlet, hex #D91C05, orange-leaning rather than pink or crimson. This exact
-red appears as: a brilliant neon ring tracing the full circumference of the
-circular door; a recessed biometric scanner plate glowing at the exact centre
-of the door, framed by four thin corner brackets; thin red emergency strip
-lighting running vertically down the wall panels on both sides; red-anodized
-metal accents on the rotary wheel handle and on the heads of the locking
-bolts; and a long soft vermilion reflection stretching across the polished
-black floor. Everything else is near-black and gunmetal so the red reads as
-the only colour in the frame.
+Locked-off static camera. No camera movement whatsoever, no push in, no drift,
+no zoom.
+
+The red neon ring pulses slowly, brightening to a full glow and easing back
+down once across the shot. The square scanner plate at the centre of the door
+breathes faintly in and out of intensity, and its four corner brackets glint.
+Fine dust motes drift lazily through the red light. The thin haze near the
+floor shifts almost imperceptibly. The red reflection on the polished floor
+ripples very slightly.
+
+Every part of the vault stays absolutely motionless: the door does not move,
+the bolts do not move, the wheel does not turn, the hinges do not shift.
+Nothing opens.
+
+Extremely subtle, quiet, restrained, hypnotic. One continuous shot, no cuts.
+
+No text, no captions, no subtitles, no watermarks, no UI overlays.
 ```
 
-### Frame 1 — `vault-closed`
+The locked-off camera is what lets this loop invisibly.
+
+### Clip 2 — opening
+
+`start: ①` · `end: ③` · 4s · 9:16 · audio off
 
 ```
-A colossal circular bank vault door set into a square gunmetal steel frame,
-centered in a dark underground vault antechamber. Walls of charcoal-black
-brushed steel panels with deep vertical seams. The door is blue-black hardened
-steel with heavy rivets, radial spoke bars, a chunky central rotary wheel
-handle, and a massive hinge column on the left side. Deep black shadows, thin
-atmospheric fog drifting near the floor.
+The heavy locking bolts retract out of the rim and back into the door body in
+rapid mechanical sequence around the circumference, and the central wheel
+spins a quarter turn.
+
+The colossal circular door then swings outward to the left, its full depth and
+radial bolt array rotating into profile view. Brilliant golden light floods out
+of the vault interior, blooming into thick volumetric god rays. A pile of gold
+bullion ingots is revealed inside, bars catching the light with brilliant
+specular highlights and spilling forward over the threshold. Heavy smoke rolls
+out across the polished floor toward the camera. The red neon ring rim-lights
+the outer edge of the swinging door, and the floor reflection blooms from red
+into a pool of gold.
+
+The camera pushes in slowly and steadily, easing to a complete stop in the
+final second so the shot settles into stillness and comes fully to rest.
+
+One continuous shot, no cuts.
+
+No text, no captions, no subtitles, no watermarks, no UI overlays.
 ```
 
-### Frame 2 — `vault-cracked`
+Frame ② is not used for a clip. It exists only as a pose reference if the
+opening needs to be split or re-timed.
 
-Generate as image-to-image from the approved Frame 1 so the set matches.
+## Post-processing
 
-```
-The same vault door in the same dark antechamber, same camera angle. The heavy
-locking bolts have retracted from the rim into the door body. The central
-rotary wheel has rotated a quarter turn. The door has cracked open by a few
-degrees along its left edge, and a razor-thin blade of blindingly warm golden
-light escapes from the seam, cutting across the dark floor. The red neon ring
-now burns white-hot at full intensity. Thin wisps of smoke begin curling out
-of the gap near the base. Red and gold light mix on the steel.
-```
+```bash
+# transcode for web
+ffmpeg -i raw.mp4 -c:v libx264 -crf 23 -pix_fmt yuv420p \
+       -movflags +faststart -an vault-open-9x16.mp4
 
-### Frame 3 — `vault-open`
+# VP9 fallback — Chromium builds without proprietary codecs cannot decode H.264
+ffmpeg -i vault-open-9x16.mp4 -c:v libvpx-vp9 -crf 34 -b:v 0 -row-mt 1 \
+       -pix_fmt yuv420p -an vault-open-9x16.webm
 
-```
-The same vault in the same dark antechamber. The colossal circular door now
-stands fully swung open toward the left, its enormous depth and the full
-radial array of locking bolts turned into view in profile. Brilliant golden
-light floods out of the open vault interior in thick volumetric god rays.
-Inside, rows of polished brass safety deposit box fronts glow warm gold and
-fall away into soft focus. Heavy smoke rolls forward out of the vault and
-spills across the polished black floor toward the camera. The red neon ring
-rim-lights the outer edge of the open door.
+# seamless idle loop (forward + reversed, so the loop point is invisible)
+ffmpeg -i idle-raw.mp4 -filter_complex \
+  "[0]split[a][b];[b]reverse[r];[a][r]concat=n=2:v=1" \
+  -c:v libx264 -crf 23 -pix_fmt yuv420p -an vault-idle-9x16.mp4
 
-The center of the glowing vault interior is deliberately clean, open and
-empty — no objects, no contents, no text — pure luminous golden negative
-space.
+# posters
+ffmpeg -i vault-idle-9x16.mp4 -frames:v 1 -q:v 3 poster-idle.jpg
+ffmpeg -sseof -0.1 -i vault-open-9x16.mp4 -update 1 -frames:v 1 -q:v 3 poster-open.jpg
 ```
 
-That last paragraph is load-bearing: the HTML reveal card lands in exactly
-that space.
+Strip audio (`-an`) — the page is muted and an audio track can block autoplay
+on iOS. Target under ~1.5 MB per clip.
 
-## Stage 2 — clips (Kling 3.0 Turbo, 1080p, 9:16)
+`poster-open.jpg` is not decorative: it backs the frozen final frame, because
+browsers sometimes drop the last decoded frame of a paused video.
 
-With a start image, describe only how the scene **evolves**. Re-describing
-what the frame already shows causes drift.
+## After the clips land
 
-### Clip A — `idle` (start = Frame 1, 5s)
-
-```
-Locked-off static camera, no camera movement whatsoever. The crimson neon ring
-pulses slowly — brightening to a full glow and easing back down once over the
-shot. The red scanner plate at the center breathes faintly in and out of
-intensity. Fine dust motes drift lazily through the red light. The thin floor
-fog shifts almost imperceptibly. Every piece of the vault door, every bolt,
-wheel and hinge stays absolutely motionless. Extremely subtle, quiet,
-restrained. One continuous shot, no cuts.
-```
-
-### Clip B — `unlock` (start = Frame 1, 5s)
-
-```
-A thin horizontal band of red light sweeps slowly down across the central
-scanner plate, then back up. The neon ring flares white-hot and a bright pulse
-races once all the way around the circle. Heavy locking bolts retract from the
-rim into the door body in rapid mechanical sequence, one after another around
-the circumference. The central rotary wheel spins a quarter turn. The door
-shudders and cracks open a few degrees along its edge, releasing a razor-thin
-blade of blinding warm golden light from the seam. Wisps of smoke start
-curling out from the base of the gap. The camera pushes in very slowly and
-steadily. One continuous shot, no cuts.
-```
-
-Frame 2 exists to verify Clip B lands on the right pose. If the render drifts
-from it, the render wins — it becomes Clip C's start.
-
-### Clip C — `open` (start = extracted last frame of the approved Clip B, 5s)
-
-```
-The colossal circular door swings outward toward the left, its full depth and
-radial bolt array rotating into profile view. Brilliant golden light floods
-out of the vault interior, blooming into thick volumetric god rays. Heavy
-smoke rolls forward out of the opening and spills across the polished floor
-toward the camera. The camera pushes in slowly and steadily toward the open
-doorway, easing to a gentle stop as the glowing interior fills the frame and
-settles. One continuous shot, no cuts.
-```
-
-## Stage 3 — post
-
-See the encoding commands in the root `README.md`. In short: boomerang the
-idle clip for a seamless loop, encode H.264 MP4 + VP9 WebM, strip audio,
-extract posters, keep each clip under ~1.5 MB.
-
-## Checkpoints
-
-Each step is approved before the next spends credits, because chaining means a
-bad Clip B poisons Clip C.
-
-1. Frame 1 → approve the look
-2. Frames 2 and 3, generated from Frame 1 as references → approve
-3. Clip A idle loop → approve
-4. Clip B unlock → approve
-5. Clip C open → approve
-6. Drop into `assets/video/`, tune `--scan-x` / `--scan-y` → approve
-7. Desktop 16:9 set
+1. Drop them into `assets/video/` under the existing filenames.
+2. Re-check `--scan-x` / `--scan-y` in `assets/css/style.css` against the real
+   footage so the hold target sits on the scanner plate.
+3. Screenshot every state at 390px and 1440px to confirm the transitions.
 
 ## Environment note
 

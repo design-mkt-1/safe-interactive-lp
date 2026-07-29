@@ -16,9 +16,9 @@ python3 -m http.server 8000
 | State       | Video               | Overlay                                          |
 | ----------- | ------------------- | ------------------------------------------------ |
 | `idle`      | idle clip, looping  | Headline + pulsing hold-to-scan target           |
-| `scanning`  | idle clip continues | Ring fills over 1.6s; releasing early resets it  |
-| `unlocking` | unlock clip         | "Access granted" badge                           |
-| `revealing` | open clip, freezes  | Offer + 15-minute reservation countdown          |
+| `scanning`  | idle clip continues | Plate outline fills over 1.6s; release resets it |
+| `unlocking` | opening clip        | "Access granted" badge, clears before the reveal |
+| `revealing` | opening clip frozen | Offer + 15-minute reservation countdown          |
 | `register`  | frozen final frame  | Registration card                                |
 
 State lives in `data-state` on `<html>`, so CSS drives all visibility.
@@ -29,16 +29,22 @@ State lives in `data-state` on `<html>`, so CSS drives all visibility.
 > They exist so the interaction can be developed and tested. Replace them
 > with the real renders — same filenames, no code change needed.
 
+Two clips only. The idle loop runs until the visitor completes the hold; the
+opening clip then plays once and holds on its final frame for the rest of the
+visit. Only a reload returns to the idle state.
+
 ```
 assets/video/
   vault-idle-9x16.mp4      seamless loop, closed vault, red neon breathing
-  vault-unlock-9x16.mp4    scan sweep, bolts retract, door cracks, gold seam
-  vault-open-9x16.mp4      door swings open, gold floods, camera pushes in
-  vault-{...}-16x9.mp4     desktop cuts of the same three beats
+  vault-open-9x16.mp4      bolts retract, door swings open, gold ingots revealed
+  vault-{...}-16x9.mp4     desktop cuts of the same two clips
 assets/img/
   poster-idle.jpg          first frame of the idle clip
-  poster-open.jpg          last frame of the open clip
+  poster-open.jpg          last frame of the opening clip — the resting state
 ```
+
+The opening clip must come to rest on its last frame. If the camera is still
+moving when it ends, the freeze reads as a stall rather than an arrival.
 
 `app.js` picks portrait or landscape sources at runtime via `matchMedia`
 (`<source media>` inside `<video>` is not reliably honoured across browsers).
@@ -63,15 +69,6 @@ ffmpeg -sseof -0.1 -i vault-open-9x16.mp4 -update 1 -frames:v 1 -q:v 3 poster-op
 Strip audio (`-an`) — the page is muted, and an audio track can block
 autoplay on iOS. Aim for under ~1.5 MB per clip.
 
-### Chaining the clips
-
-Kling animates from a start frame only, so continuity comes from feeding each
-rendered clip's true last frame into the next generation:
-
-```bash
-ffmpeg -sseof -0.05 -i clip-b.mp4 -update 1 -frames:v 1 -q:v 2 clip-b-last.jpg
-```
-
 ## Aligning the scanner target
 
 The hold-to-scan control must sit exactly over the vault's scanner plate. It
@@ -79,7 +76,7 @@ is positioned in percentages of the video frame, set in `assets/css/style.css`:
 
 ```css
 --scan-x: 50%;
---scan-y: 38%;   /* portrait */
+--scan-y: 46.5%;   /* portrait */
 ```
 
 with a landscape override in the `@media (orientation: landscape)` block.

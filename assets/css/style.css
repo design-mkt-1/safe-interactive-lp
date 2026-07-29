@@ -325,9 +325,16 @@ body {
   z-index: 4;
 }
 
+/* Confirms the scan, then clears out before the gold reveal lands so it
+   is not still sitting there over the payoff. */
 [data-state="unlocking"] .granted {
   display: flex;
-  animation: rise .4s var(--ease) both;
+  animation: rise .4s var(--ease) both,
+             grantedOut .5s var(--ease) 1.7s both;
+}
+
+@keyframes grantedOut {
+  to { opacity: 0; transform: translate(-50%, -22px); }
 }
 
 .granted__tick { width: 19px; height: 19px; }
