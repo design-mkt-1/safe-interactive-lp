@@ -7,17 +7,17 @@
 <meta name="description" content="Your Topbet welcome package is sealed in the vault. Scan to unlock it.">
 <meta name="theme-color" content="#0A0A0C">
 <meta name="robots" content="noindex">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230A0A0C'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23D91C05' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230A0A0C'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23D21502' stroke-width='3'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
 <!-- ============================================================
      VIDEO STAGE
-     Three stacked clips, crossfaded by opacity. The .stage__frame
-     box carries the clips' native aspect ratio and is sized to
-     "cover" the viewport, so anything positioned inside it in %
-     units stays locked to the same point in the footage.
+     Two clips plus a pinned still, crossfaded by opacity. app.js
+     sizes and places them so the vault lands on a target position
+     on screen, and resolves the overlay anchors from the same
+     numbers — see syncOverlay().
      ============================================================ -->
 <div class="stage" id="stage">
   <div class="stage__frame" id="stageFrame">
@@ -87,7 +87,7 @@
 
   <header class="topbar">
     <a class="brand" href="#" aria-label="Topbet home">
-      <img src="assets/img/topbet-logo.svg" alt="Topbet" width="120" height="32">
+      <img src="assets/img/logo_topbet.svg" alt="Topbet" width="136" height="30">
     </a>
     <span class="age-badge" aria-label="Eighteen plus only">18+</span>
   </header>

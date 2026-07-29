@@ -4,9 +4,9 @@
 
 :root {
   /* Brand ---------------------------------------------------------------- */
-  --tb-red:        #D91C05;   /* Topbet primary, sampled from the logo mark  */
+  --tb-red:        #D21502;   /* Topbet primary, taken from the supplied logo */
   --tb-red-hot:    #FF3B21;   /* neon / glow / hover                          */
-  --tb-red-deep:   #8E1103;   /* gradient shadow side                         */
+  --tb-red-deep:   #8A0E01;   /* gradient shadow side                         */
   --tb-gold:       #F5C147;   /* vault interior, reveal figures               */
   --tb-gold-soft:  #FFE29A;
 
@@ -65,25 +65,28 @@ body {
   z-index: 0;
 }
 
-/* A plain full-bleed box. Do NOT try to give this the footage's aspect ratio:
-   aspect-ratio loses to min-width/min-height, the box silently collapses to the
-   viewport, and object-fit then crops the video by an amount that changes with
-   screen size — so any overlay positioned in % of this box drifts off its mark.
+/* A plain full-bleed clipping box. Do NOT give this the footage's aspect
+   ratio: aspect-ratio loses to min-width/min-height, the box collapses to the
+   viewport, and object-fit then crops by an amount that varies with screen
+   size — so any overlay positioned in % of it drifts off its mark.
 
-   Instead app.js computes the cover geometry and publishes the anchor point as
-   --ov-x / --ov-y (pixels) plus the video's rendered size as --ov-w / --ov-h.
-   Overlays hang off those, so they track the footage exactly at any size. */
+   app.js sizes the video itself (--vid-*) and publishes overlay anchors
+   (--ov-*, --ring-*) from the same geometry. */
 .stage__frame {
   position: absolute;
   inset: 0;
 }
 
+/* Sized and placed by app.js so the vault lands on its target, rather than
+   letting object-fit centre the video's frame. The box already carries the
+   footage's aspect ratio, so `fill` scales without distorting. */
 .clip {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  left: var(--vid-x, 0);
+  top: var(--vid-y, 0);
+  width: var(--vid-w, 100%);
+  height: var(--vid-h, 100%);
+  object-fit: fill;
   opacity: 0;
   /* Duration is published by app.js as CROSSFADE_MS so the blend and the
      delayed play() cannot drift apart. */
@@ -175,7 +178,7 @@ body {
   padding: 0;
   border: 0;
   border-radius: 16px;
-  background: radial-gradient(circle, rgba(217,28,5,.22) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(210,21,2,.22) 0%, transparent 70%);
   color: var(--tb-red-hot);
   cursor: pointer;
   touch-action: none;          /* stop the hold turning into a scroll        */

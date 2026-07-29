@@ -84,6 +84,16 @@
     landscape: { x: 0.505, y: 0.492, d: 0.210 }
   };
 
+  // Where the vault should sit on screen, as a fraction of the viewport.
+  // Plain object-fit:cover centres the video's FRAME, which only centres the
+  // vault if the vault happens to sit dead centre of the footage — it does
+  // not, so the vault drifted a few percent off. These pin the vault itself.
+  // Portrait puts it slightly above the middle to leave the copy room below.
+  var VAULT_TARGET = {
+    portrait:  { x: 0.500, y: 0.430 },
+    landscape: { x: 0.500, y: 0.500 }
+  };
+
   // 'video'  — idle state plays vault-idle-*; 'still' — idle state is a static
   // poster and the motion comes from CSS. 'auto' picks 'still' when the idle
   // clip is missing or fails to load, so a missing file degrades rather than
@@ -196,12 +206,18 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * Overlay geometry
+   * Stage geometry — focal-point cover
    *
-   * Reproduces what object-fit:cover does to the video, then resolves the
-   * SCAN_POINT fraction into page pixels. This is the whole reason overlays
-   * stay glued to the footage: we never assume the container matches the
-   * video's aspect ratio, we measure the crop and account for it.
+   * Sizes and positions the video so a chosen point in the FOOTAGE (the
+   * vault) lands on a chosen point on SCREEN, while still covering the
+   * viewport with no exposed edges.
+   *
+   * Plain object-fit:cover cannot do this: it centres the video's FRAME, so
+   * the vault only ends up centred if it happens to sit dead centre of the
+   * footage. It does not, so the vault drifted a few percent off.
+   *
+   * The scanner target and ring glow resolve from the same numbers, so
+   * overlays stay glued to the footage by construction.
    * ------------------------------------------------------------------ */
 
   function syncOverlay() {
@@ -217,27 +233,38 @@
       ? video.videoWidth / video.videoHeight
       : (landscape ? 16 / 9 : 9 / 16);
 
-    // cover: scale until both axes are filled, overflow is clipped
-    var w, h;
-    if (box.width / box.height > aspect) {
-      w = box.width;  h = box.width / aspect;
-    } else {
-      h = box.height; w = box.height * aspect;
-    }
+    var ring   = landscape ? RING_POINT.landscape   : RING_POINT.portrait;
+    var point  = landscape ? SCAN_POINT.landscape   : SCAN_POINT.portrait;
+    var target = landscape ? VAULT_TARGET.landscape : VAULT_TARGET.portrait;
 
-    var offsetX = (box.width  - w) / 2;
-    var offsetY = (box.height - h) / 2;
-    var point   = landscape ? SCAN_POINT.landscape : SCAN_POINT.portrait;
+    var wantX = target.x * box.width;
+    var wantY = target.y * box.height;
 
-    var ring = landscape ? RING_POINT.landscape : RING_POINT.portrait;
+    // Smallest size that still reaches every edge with the vault pinned at
+    // (wantX, wantY). Pinning off-centre needs MORE size than plain cover,
+    // because the longer side of the split has to span further.
+    var minW = Math.max(wantX / ring.x, (box.width  - wantX) / (1 - ring.x));
+    var minH = Math.max(wantY / ring.y, (box.height - wantY) / (1 - ring.y));
+
+    var w = Math.max(minW, minH * aspect);
+    var h = w / aspect;
+    if (h < minH) { h = minH; w = h * aspect; }
+
+    var left = wantX - ring.x * w;
+    var top  = wantY - ring.y * h;
 
     var s = root.style;
-    s.setProperty('--ov-x', (offsetX + point.x * w).toFixed(2) + 'px');
-    s.setProperty('--ov-y', (offsetY + point.y * h).toFixed(2) + 'px');
+    s.setProperty('--vid-x', left.toFixed(2) + 'px');
+    s.setProperty('--vid-y', top.toFixed(2)  + 'px');
+    s.setProperty('--vid-w', w.toFixed(2)    + 'px');
+    s.setProperty('--vid-h', h.toFixed(2)    + 'px');
+
+    s.setProperty('--ov-x', (left + point.x * w).toFixed(2) + 'px');
+    s.setProperty('--ov-y', (top  + point.y * h).toFixed(2) + 'px');
     s.setProperty('--ov-w', w.toFixed(2) + 'px');
     s.setProperty('--ov-h', h.toFixed(2) + 'px');
-    s.setProperty('--ring-x', (offsetX + ring.x * w).toFixed(2) + 'px');
-    s.setProperty('--ring-y', (offsetY + ring.y * h).toFixed(2) + 'px');
+    s.setProperty('--ring-x', (left + ring.x * w).toFixed(2) + 'px');
+    s.setProperty('--ring-y', (top  + ring.y * h).toFixed(2) + 'px');
     s.setProperty('--ring-d', (ring.d * w).toFixed(2) + 'px');
   }
 
