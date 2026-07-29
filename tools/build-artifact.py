@@ -92,12 +92,20 @@ def main() -> int:
         return 1
 
     # --- images referenced from the markup ---------------------------------
-    for name in ('poster-idle.jpg', 'poster-open.jpg', 'topbet-logo.svg'):
+    # Discovered from the HTML rather than hard-coded, so renaming an asset
+    # cannot silently drop it from the bundle.
+    for name in sorted(set(re.findall(r'assets/img/([A-Za-z0-9._-]+)', html))):
         try:
             uri = data_uri(find(name))
-        except FileNotFoundError:
+        except (FileNotFoundError, KeyError):
+            print(f'  ! could not inline assets/img/{name}', file=sys.stderr)
             continue
         html = html.replace(f'assets/img/{name}', uri)
+
+    if 'assets/img/' in html:
+        left = set(re.findall(r'assets/img/[A-Za-z0-9._-]+', html))
+        print(f'  ! still referencing external images: {left}', file=sys.stderr)
+        return 1
 
     # --- strip the parts the artifact wrapper supplies ----------------------
     body = re.search(r'<body[^>]*>(.*)</body>', html, re.S)
