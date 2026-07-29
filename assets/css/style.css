@@ -1,0 +1,640 @@
+/* ==========================================================================
+   Topbet — Interactive Vault Landing Page
+   ========================================================================== */
+
+:root {
+  /* Brand ---------------------------------------------------------------- */
+  --tb-red:        #D91C05;   /* Topbet primary, sampled from the logo mark  */
+  --tb-red-hot:    #FF3B21;   /* neon / glow / hover                          */
+  --tb-red-deep:   #8E1103;   /* gradient shadow side                         */
+  --tb-gold:       #F5C147;   /* vault interior, reveal figures               */
+  --tb-gold-soft:  #FFE29A;
+
+  --tb-ink:        #0A0A0C;
+  --tb-steel:      #15171C;
+  --tb-steel-2:    #1E2128;
+  --tb-mist:       #C9CDD6;
+  --tb-mist-dim:   #8A9099;
+
+  /* Scanner target position, as a % of the video frame box.
+     ADJUST THESE TWO once the final render is in — they place the
+     hold-to-scan control directly over the vault's scanner plate. */
+  --scan-x: 50%;
+  --scan-y: 38%;
+  --scan-size: clamp(88px, 22vw, 132px);
+
+  --ease: cubic-bezier(.22,.61,.36,1);
+  --shell-max: 460px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--tb-ink);
+  color: var(--tb-mist);
+  font: 400 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ==========================================================================
+   Stage — the video layer
+   ========================================================================== */
+
+.stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--tb-ink);
+  z-index: 0;
+}
+
+/* Sized to "cover" the viewport while keeping the clips' 9:16 ratio.
+   Because the box itself matches the footage, % coordinates inside it
+   land on the same pixel of the video at every viewport size. */
+.stage__frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  aspect-ratio: 9 / 16;
+  width: 100%;
+  height: auto;
+  min-width: 100%;
+  min-height: 100%;
+}
+
+@media (orientation: landscape) {
+  .stage__frame { aspect-ratio: 16 / 9; }
+  :root { --scan-y: 46%; }
+}
+
+.clip {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity .45s var(--ease);
+  pointer-events: none;
+}
+
+.clip.is-active { opacity: 1; }
+
+/* The pinned final still sits beneath the clips. */
+.clip--still { opacity: 0; z-index: -1; }
+.clip--still.is-active { opacity: 1; }
+
+.stage__vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 70% at 50% 32%, transparent 40%, rgba(10,10,12,.55) 100%),
+    linear-gradient(to bottom, rgba(10,10,12,.65) 0%, transparent 22%,
+                    transparent 46%, rgba(10,10,12,.92) 88%);
+}
+
+/* ==========================================================================
+   Scanner — hold-to-unlock target
+   ========================================================================== */
+
+.scanner {
+  position: absolute;
+  left: var(--scan-x);
+  top: var(--scan-y);
+  transform: translate(-50%, -50%);
+  width: var(--scan-size);
+  height: var(--scan-size);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(217,28,5,.22) 0%, transparent 70%);
+  color: var(--tb-red-hot);
+  cursor: pointer;
+  touch-action: none;          /* stop the hold turning into a scroll        */
+  -webkit-tap-highlight-color: transparent;
+  z-index: 3;
+  transition: opacity .35s var(--ease), transform .35s var(--ease);
+}
+
+.scanner:focus-visible {
+  outline: 2px solid var(--tb-gold);
+  outline-offset: 6px;
+}
+
+.scanner__ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);   /* start the sweep at 12 o'clock              */
+}
+
+.scanner__track,
+.scanner__progress {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.scanner__track { stroke: rgba(255,255,255,.16); }
+
+.scanner__progress {
+  stroke: var(--tb-red-hot);
+  stroke-dasharray: 289;       /* 2 * PI * r(46) ≈ 289                       */
+  stroke-dashoffset: 289;
+  filter: drop-shadow(0 0 6px var(--tb-red-hot));
+}
+
+.scanner__pad {
+  width: 46%;
+  color: #fff;
+  opacity: .9;
+  filter: drop-shadow(0 0 8px var(--tb-red-hot));
+}
+.scanner__pad svg { width: 100%; height: auto; display: block; }
+
+/* Idle attract-loop. Suppressed while the user is actually holding. */
+[data-state="idle"] .scanner { animation: breathe 2.6s var(--ease) infinite; }
+
+@keyframes breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(1);    opacity: .85; }
+  50%      { transform: translate(-50%, -50%) scale(1.07); opacity: 1;   }
+}
+
+[data-state="scanning"] .scanner { animation: none; }
+
+/* Once unlocking begins the target has done its job. */
+[data-state="unlocking"] .scanner,
+[data-state="revealing"] .scanner,
+[data-state="register"]  .scanner {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Shell / layout
+   ========================================================================== */
+
+.shell {
+  position: relative;
+  z-index: 2;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  padding: max(16px, env(safe-area-inset-top)) 20px
+           max(16px, env(safe-area-inset-bottom));
+}
+
+/* The overlay sits above the stage, so every layout container must be
+   pointer-transparent or it swallows clicks meant for the scanner — the
+   scanner lives inside .stage and cannot escape that stacking context.
+   Only genuinely interactive blocks opt back in. */
+.shell,
+.topbar,
+.content,
+.footer,
+.panel--intro,
+.granted { pointer-events: none; }
+
+.panel--reveal,
+.panel--register,
+.brand,
+.footer a { pointer-events: auto; }
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: var(--shell-max);
+  margin: 0 auto;
+}
+
+.brand img { display: block; height: 30px; width: auto; }
+
+.age-badge {
+  display: grid;
+  place-items: center;
+  width: 34px; height: 34px;
+  border: 1.5px solid var(--tb-red);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  background: rgba(10,10,12,.55);
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 100%;
+  max-width: var(--shell-max);
+  margin: 0 auto;
+  padding-bottom: 8px;
+}
+
+.panel { animation: rise .55s var(--ease) both; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ==========================================================================
+   Intro copy
+   ========================================================================== */
+
+.panel--intro { text-align: center; margin-bottom: 4vh; }
+
+.headline {
+  margin: 0 0 10px;
+  font-size: clamp(26px, 7.2vw, 36px);
+  line-height: 1.12;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  color: #fff;
+  text-shadow: 0 2px 24px rgba(0,0,0,.75);
+}
+
+.subhead {
+  margin: 0 0 22px;
+  font-size: clamp(15px, 4vw, 17px);
+  color: var(--tb-mist);
+  text-shadow: 0 1px 12px rgba(0,0,0,.8);
+}
+
+.hint {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--tb-red-hot);
+  font-weight: 700;
+  animation: pulse 2.6s var(--ease) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: .55; }
+  50%      { opacity: 1;   }
+}
+
+[data-state="scanning"] .hint { animation: none; opacity: 1; }
+
+/* ==========================================================================
+   Access granted
+   ========================================================================== */
+
+.granted {
+  position: fixed;
+  left: 50%;
+  top: 22%;
+  transform: translate(-50%, -12px);
+  display: none;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 20px 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: linear-gradient(135deg, var(--tb-red) 0%, var(--tb-red-deep) 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 8px 40px rgba(217,28,5,.5);
+  z-index: 4;
+}
+
+[data-state="unlocking"] .granted {
+  display: flex;
+  animation: rise .4s var(--ease) both;
+}
+
+.granted__tick { width: 19px; height: 19px; }
+
+/* ==========================================================================
+   Reveal
+   ========================================================================== */
+
+.panel--reveal {
+  position: relative;
+  text-align: center;
+  margin-bottom: 3vh;
+}
+
+/* The open vault throws a lot of light exactly where this copy sits.
+   A soft scrim keeps the gold type readable against it. */
+.panel--reveal::before {
+  content: "";
+  position: absolute;
+  inset: -28px -24px -18px;
+  z-index: -1;
+  border-radius: 28px;
+  background: radial-gradient(70% 60% at 50% 45%,
+              rgba(10,10,12,.82) 0%, rgba(10,10,12,.55) 55%, transparent 100%);
+}
+
+.reveal__kicker {
+  margin: 0 0 6px;
+  font-size: 13px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--tb-gold);
+  text-shadow: 0 1px 10px rgba(0,0,0,.9);
+}
+
+.reveal__offer { margin: 0 0 20px; }
+
+.reveal__big,
+.reveal__plus { display: block; }
+
+.reveal__big {
+  font-size: clamp(38px, 12vw, 60px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -.03em;
+  background: linear-gradient(180deg, #fff 0%, var(--tb-gold-soft) 45%, var(--tb-gold) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 4px 26px rgba(245,193,71,.45));
+}
+
+.reveal__plus {
+  margin-top: 4px;
+  font-size: clamp(22px, 7vw, 32px);
+  font-weight: 800;
+  color: var(--tb-gold-soft);
+  letter-spacing: -.01em;
+}
+
+.lock {
+  display: inline-block;
+  padding: 12px 22px;
+  margin-bottom: 22px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  background: rgba(10,10,12,.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.lock__label {
+  margin: 0 0 4px;
+  font-size: 12.5px;
+  color: var(--tb-mist-dim);
+}
+
+.lock__timer {
+  margin: 0;
+  font: 700 26px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: #fff;
+  letter-spacing: .06em;
+  font-variant-numeric: tabular-nums;
+}
+
+.lock.is-expired .lock__timer { color: var(--tb-mist-dim); }
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+.cta {
+  display: block;
+  width: 100%;
+  padding: 17px 24px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--tb-red-hot) 0%, var(--tb-red) 55%, var(--tb-red-deep) 100%);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: .01em;
+  cursor: pointer;
+  box-shadow: 0 10px 34px rgba(217,28,5,.42);
+  transition: transform .18s var(--ease), box-shadow .18s var(--ease), filter .18s var(--ease);
+}
+
+.cta:hover  { filter: brightness(1.08); box-shadow: 0 12px 42px rgba(217,28,5,.55); }
+.cta:active { transform: translateY(1px) scale(.995); }
+
+.cta:focus-visible { outline: 2px solid var(--tb-gold); outline-offset: 3px; }
+
+/* ==========================================================================
+   Registration
+   ========================================================================== */
+
+.panel--register {
+  padding: 22px 20px 24px;
+  margin-bottom: 2vh;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(30,33,40,.94) 0%, rgba(10,10,12,.97) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 -10px 60px rgba(0,0,0,.7), 0 0 0 1px rgba(217,28,5,.16);
+}
+
+.card__title {
+  margin: 0 0 18px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.field { margin-bottom: 15px; }
+
+.field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--tb-mist-dim);
+}
+
+.field input[type="email"],
+.field input[type="password"] {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 11px;
+  background: rgba(10,10,12,.7);
+  color: #fff;
+  font-size: 16px;                    /* 16px stops iOS zooming on focus     */
+  transition: border-color .18s var(--ease), box-shadow .18s var(--ease);
+}
+
+.field input::placeholder { color: #5d636d; }
+
+.field input:focus {
+  outline: none;
+  border-color: var(--tb-red);
+  box-shadow: 0 0 0 3px rgba(217,28,5,.2);
+}
+
+.field input[aria-invalid="true"] { border-color: #ff5a45; }
+
+.field--check {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 9px;
+  align-items: start;
+  margin: 18px 0 20px;
+}
+
+.field--check input {
+  width: 19px; height: 19px;
+  margin: 1px 0 0;
+  accent-color: var(--tb-red);
+  flex: none;
+}
+
+.field--check label {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--tb-mist);
+}
+
+.field--check .err { grid-column: 1 / -1; }
+
+.field a { color: var(--tb-mist); text-underline-offset: 2px; }
+.field a:hover { color: #fff; }
+
+.err {
+  margin: 6px 0 0;
+  min-height: 0;
+  font-size: 12.5px;
+  color: #ff7a68;
+}
+.err:empty { margin: 0; }
+
+.form__note {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--tb-mist-dim);
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+
+.footer {
+  width: 100%;
+  max-width: var(--shell-max);
+  margin: 0 auto;
+  padding-top: 14px;
+  text-align: center;
+}
+
+.footer p {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: #6d737d;
+}
+
+.footer a { color: #8A9099; }
+
+/* ==========================================================================
+   Tap to begin (autoplay blocked)
+   ========================================================================== */
+
+.tapstart {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  border: 0;
+  background: rgba(10,10,12,.88);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  cursor: pointer;
+}
+
+.tapstart[hidden] { display: none; }
+
+/* ==========================================================================
+   State visibility
+   ========================================================================== */
+
+[data-state="revealing"] .panel--intro,
+[data-state="register"]  .panel--intro,
+[data-state="unlocking"] .panel--intro { display: none; }
+
+[data-state="register"] .panel--reveal .lock { margin-bottom: 0; }
+[data-state="register"] .panel--reveal #toRegister { display: none; }
+
+[data-state="register"] .panel--reveal {
+  margin-bottom: 18px;
+  transform: scale(.86);
+  transform-origin: bottom center;
+  opacity: .95;
+}
+
+/* ==========================================================================
+   Reduced motion — skip the cinematics entirely
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+  .clip { display: none; }
+  .clip--still { display: block; opacity: 1; }
+}
+
+/* ==========================================================================
+   Desktop
+   ========================================================================== */
+
+@media (min-width: 900px) and (orientation: landscape) {
+  :root { --shell-max: 520px; }
+
+  .content {
+    margin: 0 0 0 auto;
+    padding-right: 3vw;
+    justify-content: center;
+  }
+
+  .topbar { max-width: none; }
+
+  .stage__vignette {
+    background:
+      radial-gradient(90% 90% at 28% 45%, transparent 30%, rgba(10,10,12,.5) 100%),
+      linear-gradient(to right, rgba(10,10,12,.55) 0%, transparent 35%,
+                      rgba(10,10,12,.9) 100%);
+  }
+
+  .footer { max-width: none; }
+}
