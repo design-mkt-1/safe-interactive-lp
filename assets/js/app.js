@@ -151,9 +151,12 @@
   // Landscape puts the vault left of centre so the content card has the right
   // half to itself, per the Figma desktop layout. Portrait stacks instead, so
   // it stays centred with the copy below.
+  // Landscape: measured off the Figma desktop frames, the vault's centre sits
+  // at ~40% of the viewport width, which keeps the whole door in frame with
+  // the card overlapping its right edge. At 30% the door ran off the left.
   var VAULT_TARGET = {
     portrait:  { x: 0.500, y: 0.500 },
-    landscape: { x: 0.300, y: 0.500 }
+    landscape: { x: 0.400, y: 0.500 }
   };
 
   // 'video'  — idle state plays vault-idle-*; 'still' — idle state is a static

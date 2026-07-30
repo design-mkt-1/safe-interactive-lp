@@ -158,9 +158,10 @@ All user-facing text is in the `COPY` object at the top of `assets/js/app.js`.
 Add a locale and change `ACTIVE_LOCALE`; no markup changes needed. Nothing is
 baked into the video, which is what makes this cheap.
 
-Copy is Uzbek (`ACTIVE_LOCALE = 'uz'`), taken from the Figma file. The header
-carries a language control, but **it is presentation only — no second locale
-is wired up yet.**
+Copy is Uzbek (`ACTIVE_LOCALE = 'uz'`), taken from the Figma file. Russian is
+wired up too; the header switcher offers UZ and RU and the choice persists in
+`localStorage`. **The Russian copy is a translation of the Uzbek and has not
+been reviewed by a native speaker.**
 
 Open questions carried over from the design, all still placeholders:
 

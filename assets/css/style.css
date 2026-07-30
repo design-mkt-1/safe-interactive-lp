@@ -1010,14 +1010,21 @@ body {
    ========================================================================== */
 
 @media (min-width: 900px) and (orientation: landscape) {
-  :root { --shell-max: 520px; }
+  /* The design's card is ~42% of the viewport width — far wider than the
+     mobile column — and its type scales with it. Everything below is sized in
+     vw against the 1920 frame the Figma was drawn at, with clamps so it stays
+     sane on a small laptop and stops growing on an ultrawide.
 
-  .shell { padding-inline: 4vw; }
+     Measured off the 1920 frame: the card spans 52.5% -> 94.4% of the
+     viewport, so it is 42vw wide sitting 5.6vw off the right edge. */
+  :root { --shell-max: min(42vw, 840px); }
+
+  .shell { padding-inline: 5.6vw; }
 
   .topbar {
-    margin: 0 -4vw;
-    padding-inline: 4vw;
-    width: calc(100% + 8vw);
+    margin: 0 -5.6vw;
+    padding-inline: 5.6vw;
+    width: calc(100% + 11.2vw);
   }
 
   .content {
@@ -1026,7 +1033,29 @@ body {
     padding-bottom: 4vh;
   }
 
-  .card { padding: 28px 24px; }
+  .card { padding: 0; }
+
+  .card__logo  { height: clamp(34px, 2.9vw, 58px); }
+
+  .offer__head { font-size: clamp(30px, 3.75vw, 72px); }
+  .offer__sub  { font-size: clamp(17px, 1.5vw, 29px); }
+
+  .reveal__head   { font-size: clamp(25px, 2.6vw, 50px); gap: clamp(10px, .95vw, 18px); }
+  .reveal__icon   { width: clamp(34px, 3.1vw, 60px); height: clamp(34px, 3.1vw, 60px);
+                    border-radius: 50%; }
+  .reveal__icon svg { width: 52%; height: 52%; }
+  .reveal__amount { font-size: clamp(48px, 5.7vw, 110px); }
+
+  .lockbox     { padding: clamp(12px, 1.2vw, 22px); gap: clamp(6px, .5vw, 12px);
+                 border-radius: 12px; }
+  .lock__line  { font-size: clamp(13px, 1.05vw, 20px); }
+  .lock__timer { font-size: clamp(26px, 2.15vw, 42px); gap: clamp(8px, .7vw, 14px); }
+  .lock__clock { width: clamp(18px, 1.3vw, 26px); height: clamp(18px, 1.3vw, 26px); }
+
+  .cta      { height: clamp(50px, 4.1vw, 78px);
+              font-size: clamp(16px, 1.35vw, 26px);
+              border-radius: 6px; }
+  .cta-frame { border-radius: 6px; padding: clamp(4px, .35vw, 7px); }
 
   .card--form { max-width: none; }
 
@@ -1040,8 +1069,12 @@ body {
   .panel--intro,
   .panel--reveal {
     justify-content: flex-start;
-    gap: 20px;
-    padding: 28px 28px 32px;
+    /* The design runs "150 000 UZS BOR" nearly edge to edge inside the card,
+       which only works with a narrow inset — 44px of padding pushed it onto a
+       third line. Padding and head size are a pair: change one and check the
+       headline still breaks in two. */
+    gap: clamp(16px, 1.55vw, 30px);
+    padding: clamp(18px, 1.55vw, 30px);
     border-radius: 8px;
     background: var(--tb-card);
     box-shadow: var(--tb-card-glow);
