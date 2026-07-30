@@ -95,13 +95,17 @@
       <img src="assets/img/logo_topbet.svg" alt="Topbet" width="139" height="32">
     </a>
     <div class="topbar__right">
-      <button class="lang" id="langBtn" type="button" aria-haspopup="true" aria-expanded="false">
-        <span id="langCurrent">EN</span>
-        <svg class="lang__caret" viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor"
-                stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
+      <div class="lang" id="lang">
+        <button class="lang__btn" id="langBtn" type="button"
+                aria-haspopup="listbox" aria-expanded="false">
+          <span id="langCurrent">UZ</span>
+          <svg class="lang__caret" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor"
+                  stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <ul class="lang__menu" id="langMenu" role="listbox" hidden></ul>
+      </div>
       <span class="age-badge" aria-label="18+">18+</span>
     </div>
   </header>
@@ -111,6 +115,8 @@
     <!-- IDLE ------------------------------------------------- -->
     <section class="panel panel--intro" id="panelIntro">
       <div class="card card--offer">
+        <img class="card__logo" src="assets/img/logo_topbet.svg" alt="Topbet"
+             width="139" height="32">
         <p class="offer__head">
           <span id="offerLine1"></span>
           <span id="offerLine2"></span>
@@ -141,6 +147,8 @@
     <!-- REVEAL ----------------------------------------------- -->
     <section class="panel panel--reveal" id="panelReveal" hidden>
       <div class="card card--offer">
+        <img class="card__logo" src="assets/img/logo_topbet.svg" alt="Topbet"
+             width="139" height="32">
         <p class="reveal__head">
           <span class="reveal__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="currentColor">
@@ -153,9 +161,8 @@
         </p>
         <p class="reveal__amount" id="offerPrimary"></p>
         <p class="offer__sub" id="offerSecondary"></p>
-      </div>
 
-      <div class="card card--lock" id="lockBox">
+        <div class="lockbox" id="lockBox">
         <p class="lock__line" id="lockLabel"></p>
         <p class="lock__line" id="lockSub"></p>
         <p class="lock__timer">
@@ -165,6 +172,8 @@
           </svg>
           <span id="lockTimer">10:00</span>
         </p>
+        </div>
+
         <div class="cta-frame">
           <button class="cta" id="toRegister" type="button"></button>
         </div>
@@ -173,11 +182,12 @@
 
     <!-- REGISTER --------------------------------------------- -->
     <section class="panel panel--register" id="panelRegister" hidden>
-      <p class="reg__amount" id="regAmount"></p>
-      <p class="reg__claim" id="regClaim"></p>
-      <p class="reg__note" id="regNote"></p>
-
       <div class="card card--form">
+        <img class="card__logo" src="assets/img/logo_topbet.svg" alt="Topbet"
+             width="139" height="32">
+        <p class="reg__amount" id="regAmount"></p>
+        <p class="reg__claim" id="regClaim"></p>
+        <p class="reg__note" id="regNote"></p>
         <div class="tabs" role="tablist">
           <button class="tab is-active" id="tabPhone" type="button" role="tab"
                   aria-selected="true" data-mode="phone">

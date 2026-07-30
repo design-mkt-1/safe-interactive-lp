@@ -8,6 +8,9 @@
   --tb-red:        #D21502;   /* Topbet primary, taken from the supplied logo */
   --tb-red-hot:    #FF3B21;   /* neon / glow / hover                          */
   --tb-red-deep:   #9B0E00;   /* the design's button underline + text shadow  */
+  --tb-green:      #1EA84B;   /* access granted — success, not brand red     */
+  --tb-green-deep: #0F7A34;
+
   --tb-gold:       #F5C147;
   --tb-gold-soft:  #FFE29A;
 
@@ -372,11 +375,27 @@ body {
 .footer,
 .granted { pointer-events: none; }
 
-.panel--intro,
-.panel--reveal,
+/* Only interactive leaves opt back in — NOT the panels. A panel spans the
+   whole column, so making it clickable puts an invisible sheet over the
+   vault's scanner plate, which is CTA #1. That is exactly what happened:
+   every mobile size reported the scanner as unreachable, with .panel--intro
+   as the topmost element at its centre.
+
+   The cards stay transparent to pointers too, so a tap that lands on a card
+   overlapping the plate still reaches the vault. */
 .panel--register,
+.card--form,
+.cta-frame,
+.cta,
+.tab,
+.input,
+.dial,
+.select,
+.form,
 .brand,
 .lang,
+.lang__btn,
+.lang__menu,
 .footer a { pointer-events: auto; }
 
 /* Header — logo left, language + age right, over a top scrim. */
@@ -396,7 +415,9 @@ body {
 
 .topbar__right { display: flex; align-items: center; gap: 10px; }
 
-.lang {
+.lang { position: relative; }
+
+.lang__btn {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -411,7 +432,44 @@ body {
   filter: drop-shadow(0 2px 0 var(--tb-red-deep));
 }
 
-.lang__caret { width: 16px; height: 16px; }
+.lang__caret {
+  width: 16px; height: 16px;
+  transition: transform .18s var(--ease);
+}
+
+.lang.is-open .lang__caret { transform: rotate(180deg); }
+
+.lang__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 5;
+  min-width: 100%;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid var(--tb-red);
+  border-radius: 8px;
+  background: #0A0A0B;
+  box-shadow: 0 12px 40px rgba(0,0,0,.6);
+}
+
+.lang__option {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: #fff;
+  font: 700 18px/1.4 var(--tb-display);
+  text-transform: uppercase;
+  text-align: center;
+  cursor: pointer;
+}
+
+.lang__option[aria-selected="true"] { background: var(--tb-red); }
+.lang__option:hover:not([aria-selected="true"]) { background: rgba(255,255,255,.08); }
 
 .age-badge {
   display: grid;
@@ -464,6 +522,10 @@ body {
   gap: 16px;
   align-items: center;
 }
+
+/* The design carries the logo in the topbar on mobile and at the head of the
+   card on desktop — never both. */
+.card__logo { display: none; height: 32px; width: auto; }
 
 .offer__head {
   margin: 0;
@@ -536,13 +598,13 @@ body {
   padding: 10px 20px 10px 14px;
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,.14);
-  background: linear-gradient(135deg, var(--tb-red) 0%, var(--tb-red-deep) 100%);
+  background: linear-gradient(135deg, var(--tb-green) 0%, var(--tb-green-deep) 100%);
   color: #fff;
   font: 600 14px/1 var(--tb-display);
   letter-spacing: .06em;
   text-transform: uppercase;
   white-space: nowrap;
-  box-shadow: 0 8px 40px rgba(210,21,2,.5);
+  box-shadow: 0 8px 40px rgba(22,163,74,.45);
   z-index: 4;
 }
 
@@ -614,12 +676,15 @@ body {
 
 /* Timer card ------------------------------------------------------------- */
 
-.card--lock {
+.lockbox {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 12px;
+  width: 100%;
+  padding: 12px 8px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .45);
 }
 
 .lock__line {
@@ -639,7 +704,7 @@ body {
 
 .lock__clock { width: 18px; height: 18px; color: var(--tb-red); }
 
-.card--lock.is-expired .lock__timer { color: var(--tb-mist-dim); }
+.lockbox.is-expired .lock__timer { color: var(--tb-mist-dim); }
 
 /* ==========================================================================
    Buttons
@@ -968,6 +1033,47 @@ body {
   .cta-frame { max-width: 100%; }
 
   .footer { max-width: none; }
+
+  /* The design collapses each state into ONE card on desktop — logo, copy and
+     CTA together — with the vault beside it rather than behind it. The panel
+     itself becomes that card and its inner blocks go transparent. */
+  .panel--intro,
+  .panel--reveal {
+    justify-content: flex-start;
+    gap: 20px;
+    padding: 28px 28px 32px;
+    border-radius: 8px;
+    background: var(--tb-card);
+    box-shadow: var(--tb-card-glow);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    flex: 0 0 auto;
+  }
+
+  .panel--intro .card,
+  .panel--reveal .card {
+    padding: 0;
+    background: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .card__logo { display: block; }
+
+  /* Safe here: the vault is at 30%, far from the card. */
+  .panel--intro,
+  .panel--reveal { pointer-events: auto; }
+
+  /* Logo moves into the card, so the topbar keeps only the language control. */
+  .topbar .brand { display: none; }
+
+  .intro__action { width: 100%; }
+
+  /* The design sets the subhead in brand red on desktop, white on mobile. */
+  .panel--intro .offer__sub { color: var(--tb-red); }
+
+  .card--form { padding: 28px 24px 32px; }
 
   /* The vault sits left, so weight the scrim to the right where the copy is. */
   .stage__vignette {

@@ -57,8 +57,53 @@
         'Topbet. Qimor o\u2018yinlari qaramlik keltirishi mumkin \u2014 mas\u2019uliyat bilan o\u2018ynang. ' +
         'Faqat 18+. <a href="#responsible">Mas\u2019uliyatli o\u2018yin</a> \u00b7 ' +
         '<a href="#terms">Shartlar amal qiladi</a>'
+    }    ,
+    ru: {
+      offerLine1: '\u0412 \u0421\u0415\u0419\u0424\u0415',
+      offerLine2: '150 000 UZS',
+      offerSub:   '\u0423\u043c\u043d\u043e\u0436\u044c\u0442\u0435 \u0441\u0432\u043e\u0439 \u0432\u044b\u0438\u0433\u0440\u044b\u0448',
+      openVault:  '\u041e\u0422\u041a\u0420\u042b\u0422\u042c \u0421\u0415\u0419\u0424',
+      hint:        '\u041d\u0430\u0436\u043c\u0438\u0442\u0435 \u0438 \u0443\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0439\u0442\u0435',
+      hintHolding: '\u0423\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0439\u0442\u0435\u2026',
+      granted:     '\u0414\u043e\u0441\u0442\u0443\u043f \u0440\u0430\u0437\u0440\u0435\u0448\u0451\u043d',
+
+      revealKicker:   '\u0421\u0415\u0419\u0424 \u041e\u0422\u041a\u0420\u042b\u0422!',
+      offerPrimary:   '55 000 UZS',
+      offerSecondary: '\u0423\u043c\u043d\u043e\u0436\u044c\u0442\u0435 \u0441\u0432\u043e\u0439 \u0432\u044b\u0438\u0433\u0440\u044b\u0448',
+      lockLabel:   '\u0423 \u0432\u0430\u0441 \u0435\u0441\u0442\u044c 10 \u043c\u0438\u043d\u0443\u0442',
+      lockSub:     '\u0417\u0430\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u0443\u0439\u0442\u0435\u0441\u044c, \u0447\u0442\u043e\u0431\u044b \u043f\u043e\u043b\u0443\u0447\u0438\u0442\u044c 55 000 UZS',
+      lockExpired: '\u0412\u0440\u0435\u043c\u044f \u0438\u0441\u0442\u0435\u043a\u043b\u043e',
+      toRegister:  '\u041f\u0420\u041e\u0414\u041e\u041b\u0416\u0418\u0422\u042c',
+
+      regAmount: '55 000 UZS.',
+      regClaim:  '\u0423\u0416\u0415 \u0412\u0410\u0428\u0418!',
+      regNote:   '\u041e\u0441\u0442\u0430\u043b\u043e\u0441\u044c \u0442\u043e\u043b\u044c\u043a\u043e \u0437\u0430\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u043e\u0432\u0430\u0442\u044c\u0441\u044f',
+      tabPhone:  '\u041c\u043e\u0431\u0438\u043b\u044c\u043d\u044b\u0439 \u0442\u0435\u043b\u0435\u0444\u043e\u043d',
+      tabEmail:  '\u042d\u043b\u0435\u043a\u0442\u0440\u043e\u043d\u043d\u0430\u044f \u043f\u043e\u0447\u0442\u0430',
+      phonePlaceholder: '90-000-00-00',
+      emailPlaceholder: 'email@example.com',
+      bonusOptions: ['\u0411\u043e\u043d\u0443\u0441 \u043a\u0430\u0437\u0438\u043d\u043e', '\u0421\u043f\u043e\u0440\u0442\u0438\u0432\u043d\u044b\u0439 \u0431\u043e\u043d\u0443\u0441', '\u0411\u0435\u0437 \u0431\u043e\u043d\u0443\u0441\u0430'],
+      submit:   '\u041f\u0420\u041e\u0414\u041e\u041b\u0416\u0418\u0422\u042c',
+      formNote: '\u0423\u0436\u0435 \u0435\u0441\u0442\u044c \u0430\u043a\u043a\u0430\u0443\u043d\u0442? <a href="#login">\u0412\u043e\u0439\u0442\u0438</a>',
+
+      errPhone: '\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043d\u043e\u043c\u0435\u0440 \u0442\u0435\u043b\u0435\u0444\u043e\u043d\u0430.',
+      errEmail: '\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u044d\u043b\u0435\u043a\u0442\u0440\u043e\u043d\u043d\u0443\u044e \u043f\u043e\u0447\u0442\u0443.',
+      errEmailInvalid: '\u041d\u0435\u0432\u0435\u0440\u043d\u044b\u0439 \u0430\u0434\u0440\u0435\u0441 \u044d\u043b\u0435\u043a\u0442\u0440\u043e\u043d\u043d\u043e\u0439 \u043f\u043e\u0447\u0442\u044b.',
+
+      tapStart: '\u041d\u0430\u0436\u043c\u0438\u0442\u0435, \u0447\u0442\u043e\u0431\u044b \u043d\u0430\u0447\u0430\u0442\u044c',
+
+      footerLegal:
+        'Topbet. \u0410\u0437\u0430\u0440\u0442\u043d\u044b\u0435 \u0438\u0433\u0440\u044b \u043c\u043e\u0433\u0443\u0442 \u0432\u044b\u0437\u0432\u0430\u0442\u044c \u0437\u0430\u0432\u0438\u0441\u0438\u043c\u043e\u0441\u0442\u044c \u2014 \u0438\u0433\u0440\u0430\u0439\u0442\u0435 \u043e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0435\u043d\u043d\u043e. ' +
+        '\u0422\u043e\u043b\u044c\u043a\u043e 18+. <a href="#responsible">\u041e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0435\u043d\u043d\u0430\u044f \u0438\u0433\u0440\u0430</a> \u00b7 ' +
+        '<a href="#terms">\u0423\u0441\u043b\u043e\u0432\u0438\u044f</a>'
     }
   };
+
+  // Only the two locales the campaign ships. The header control switches
+  // between them at runtime; nothing is baked into the video, so the swap is
+  // pure text.
+  var LOCALES = ['uz', 'ru'];
+  var LOCALE_KEY = 'topbet.vault.locale';
 
   var ACTIVE_LOCALE = 'uz';
   var t = COPY[ACTIVE_LOCALE];
@@ -168,6 +213,9 @@
   var rowEmail    = $('rowEmail');
 
   var contactMode = 'phone';   // which of the two the visitor is filling in
+  var lang        = $('lang');
+  var langBtn     = $('langBtn');
+  var langMenu    = $('langMenu');
 
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -214,6 +262,57 @@
     scanner.setAttribute('aria-label', t.hint);
     openVault.setAttribute('aria-label', t.openVault);
   }
+
+  /* ------------------------------------------------------------------ *
+   * Language
+   *
+   * Only the copy changes — the footage carries no text, which is what makes
+   * switching locales this cheap.
+   * ------------------------------------------------------------------ */
+
+  function setLocale(code) {
+    if (!COPY[code]) return;
+    ACTIVE_LOCALE = code;
+    t = COPY[code];
+
+    document.documentElement.lang = code;
+    $('langCurrent').textContent = code.toUpperCase();
+
+    Array.prototype.forEach.call(langMenu.children, function (li) {
+      var btn = li.firstChild;
+      btn.setAttribute('aria-selected', String(btn.dataset.lang === code));
+    });
+
+    try { window.localStorage.setItem(LOCALE_KEY, code); } catch (err) { /* private mode */ }
+
+    paint();
+    setContactMode(contactMode);   // re-apply the tab labels and placeholders
+  }
+
+  function buildLangMenu() {
+    langMenu.innerHTML = '';
+    LOCALES.forEach(function (code) {
+      var li = document.createElement('li');
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'lang__option';
+      btn.dataset.lang = code;
+      btn.textContent = code.toUpperCase();
+      btn.setAttribute('role', 'option');
+      btn.setAttribute('aria-selected', String(code === ACTIVE_LOCALE));
+      btn.addEventListener('click', function () {
+        setLocale(code);
+        closeLang();
+      });
+      li.appendChild(btn);
+      langMenu.appendChild(li);
+    });
+  }
+
+  function openLang()  { lang.classList.add('is-open');  langMenu.hidden = false;
+                         langBtn.setAttribute('aria-expanded', 'true'); }
+  function closeLang() { lang.classList.remove('is-open'); langMenu.hidden = true;
+                         langBtn.setAttribute('aria-expanded', 'false'); }
 
   /* ------------------------------------------------------------------ *
    * Contact method tabs
@@ -555,8 +654,14 @@
    * ------------------------------------------------------------------ */
 
   function boot() {
+    var saved = null;
+    try { saved = window.localStorage.getItem(LOCALE_KEY); } catch (err) { /* ignore */ }
+
+    buildLangMenu();
     paint();
     setContactMode('phone');
+    if (saved && COPY[saved] && saved !== ACTIVE_LOCALE) setLocale(saved);
+    else $('langCurrent').textContent = ACTIVE_LOCALE.toUpperCase();
     root.style.setProperty('--clip-fade', CROSSFADE_MS + 'ms');
     pickSources();
     syncOverlay();
@@ -636,6 +741,17 @@
     if (state !== 'idle' && state !== 'scanning') return;
     if (holdRAF) { cancelAnimationFrame(holdRAF); holdRAF = null; }
     unlock();
+  });
+
+  langBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (lang.classList.contains('is-open')) closeLang(); else openLang();
+  });
+  document.addEventListener('click', function (e) {
+    if (!lang.contains(e.target)) closeLang();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeLang();
   });
 
   tabPhone.addEventListener('click', function () { setContactMode('phone'); });
