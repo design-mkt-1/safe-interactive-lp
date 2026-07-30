@@ -8,10 +8,9 @@
 <meta name="theme-color" content="#131416">
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23131416'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23D21502' stroke-width='3'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Fira+Sans+Condensed:wght@500;600;700;800&family=Montserrat:wght@400;500&display=swap">
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="assets/fonts/fira-sans-condensed-800-latin.woff2">
+<link rel="stylesheet" href="assets/css/fonts.css">
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -160,20 +159,24 @@
           <span id="revealKicker"></span>
         </p>
         <p class="reveal__amount" id="offerPrimary"></p>
-        <p class="offer__sub" id="offerSecondary"></p>
+        <p class="offer__sub offer__sub--reveal" id="offerSecondary"></p>
+      </div>
 
+      <!-- The design keeps the countdown and its CTA in a SEPARATE card on
+           mobile, low on the screen, and folds them into the one card on
+           desktop. Two cards in markup; the desktop rules flatten them. -->
+      <div class="card card--lock">
         <div class="lockbox" id="lockBox">
-        <p class="lock__line" id="lockLabel"></p>
-        <p class="lock__line" id="lockSub"></p>
-        <p class="lock__timer">
-          <svg class="lock__clock" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.2 1.9"/>
-          </svg>
-          <span id="lockTimer">10:00</span>
-        </p>
+          <p class="lock__line" id="lockLabel"></p>
+          <p class="lock__line" id="lockSub"></p>
+          <p class="lock__timer">
+            <svg class="lock__clock" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.2 1.9"/>
+            </svg>
+            <span id="lockTimer">10:00</span>
+          </p>
         </div>
-
         <div class="cta-frame">
           <button class="cta" id="toRegister" type="button"></button>
         </div>
@@ -182,12 +185,16 @@
 
     <!-- REGISTER --------------------------------------------- -->
     <section class="panel panel--register" id="panelRegister" hidden>
-      <div class="card card--form">
-        <img class="card__logo" src="assets/img/logo_topbet.svg" alt="Topbet"
-             width="139" height="32">
+      <!-- No logo here: the design's registration card opens straight on the
+           amount, on both breakpoints. The claim block sits OUTSIDE the dark
+           card on mobile and inside it on desktop — hence two elements. -->
+      <div class="card card--claim">
         <p class="reg__amount" id="regAmount"></p>
         <p class="reg__claim" id="regClaim"></p>
         <p class="reg__note" id="regNote"></p>
+      </div>
+
+      <div class="card card--form">
         <div class="tabs" role="tablist">
           <button class="tab is-active" id="tabPhone" type="button" role="tab"
                   aria-selected="true" data-mode="phone">

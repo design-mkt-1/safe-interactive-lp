@@ -152,6 +152,22 @@ node tools/check-overlay-alignment.js
 It reports the anchor's position in video coordinates across 16 viewports from
 320×568 to 3440×1440. Worst drift should stay near 0.002%, which is rounding.
 
+### Where the vault sits
+
+Portrait centres it. Landscape does **not** use a fixed position: `syncOverlay`
+measures the content column and places the vault so the door's right edge stops
+`VAULT_CARD_GAP` short of the card's left edge.
+
+This cannot be solved in one step. Moving the vault left forces the video to
+scale *up* — off-centre pinning needs more size than plain cover, because the
+longer side of the split has to span further — which makes the door wider
+again. Four passes settle it to well under a pixel.
+
+`VAULT_HALF_W` is half the door's steel frame as a fraction of the video width,
+measured off the 16:9 cut where the square spans 37.5% to 62.5%. Re-measure it
+if the footage is ever re-rendered; nothing else in the page knows how wide the
+vault is.
+
 ## Copy and localisation
 
 All user-facing text is in the `COPY` object at the top of `assets/js/app.js`.
@@ -162,6 +178,59 @@ Copy is Uzbek (`ACTIVE_LOCALE = 'uz'`), taken from the Figma file. Russian is
 wired up too; the header switcher offers UZ and RU and the choice persists in
 `localStorage`. **The Russian copy is a translation of the Uzbek and has not
 been reviewed by a native speaker.**
+
+## Matching the Figma
+
+Desktop is transcribed from the 1920×1080 frames rather than approximated.
+Every size in the desktop block is the design's own pixel value multiplied by
+`--fu`, one Figma pixel expressed against the viewport:
+
+```css
+--fu: min(0.0520833vw, 0.0925926vh, 1.25px);
+```
+
+The `vw` term reproduces the design exactly on a 16:9 screen; the `vh` term
+keeps the 718px-tall reveal card inside short landscape windows; the ceiling
+stops it growing past QHD. Writing sizes this way means the composition scales
+as one piece — with independent `clamp()`s per element, the type and the box
+drift apart at intermediate widths.
+
+Measured against the design at 1920×1080 (`x`/`w` are the card's):
+
+| State    | x (design)   | w (design)  | h (design)  |
+| -------- | ------------ | ----------- | ----------- |
+| idle     | 1008 (1008)  | 820 (820)   | 573 (576)   |
+| reveal   | 1008 (1008)  | 820 (820)   | 730 (718)   |
+| register | 1280 (1253)  | 548 (548)   | 600 (585)   |
+
+The registration card is deliberately 27px right of the design. The Figma gives
+it a 119px right margin where the other two states use 92px; holding one margin
+keeps the card and the language chip from jumping sideways between states.
+
+Two details are load-bearing and easy to lose:
+
+- **Fonts are self-hosted** (`assets/fonts/`, `assets/css/fonts.css`). Beyond
+  removing a third-party request from the critical path, this is what makes the
+  design's type sizes work at all: the fallback face is ~17% wider than Fira
+  Sans Condensed, so a headline sized against the fallback comes out far too
+  small. Only latin and cyrillic subsets ship — UZ needs latin, RU cyrillic.
+- **`text-box: trim-both cap alphabetic`** on the display lines, which is what
+  Figma's `text-box-trim` does. Without it the ascender/descender slack adds up
+  and the idle card measures 641px against the design's 576. Browsers without
+  support just get a slightly taller card.
+
+### What is not from the Figma
+
+- The **18+ badge and the legal footer** are additions. The design has no
+  compliance furniture; on a gambling landing page it is not optional.
+- The **"hold the scanner" hint** under the idle CTA — the design has only the
+  button, but CTA #1 is invisible without a prompt.
+- Six **icons** are redrawn inline at the design's geometry, not the Figma
+  exports: sparkles, clock, telephone, mail, gift-wrap, and the flag pair.
+  Figma's asset host is unreachable from this environment. Every one is sized
+  to the designed outer box and leaf; swap in the real exports when available.
+- The design shows the registration submit at 50% opacity (disabled until the
+  form validates). This build keeps it active and validates on submit.
 
 Open questions carried over from the design, all still placeholders:
 

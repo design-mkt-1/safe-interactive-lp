@@ -28,6 +28,7 @@ MIME = {
     '.jpeg': 'image/jpeg',
     '.png':  'image/png',
     '.svg':  'image/svg+xml',
+    '.woff2': 'font/woff2',
 }
 
 CLIPS = ['vault-idle-9x16', 'vault-idle-16x9',
@@ -47,9 +48,35 @@ def main() -> int:
     ap.add_argument('-o', '--out', default='dist/artifact.html')
     args = ap.parse_args()
 
-    html = (ROOT / 'index.html').read_text()
-    css  = (ROOT / 'assets/css/style.css').read_text()
-    js   = (ROOT / 'assets/js/app.js').read_text()
+    html  = (ROOT / 'index.html').read_text()
+    fonts = (ROOT / 'assets/css/fonts.css').read_text()
+    css   = (ROOT / 'assets/css/style.css').read_text()
+    js    = (ROOT / 'assets/js/app.js').read_text()
+
+    # The artifact is a single file with no sibling directory, so the woff2
+    # files the font sheet points at have to travel inside it. Latin only —
+    # inlining every cyrillic face too would add ~350 KB for a locale the
+    # artifact preview does not exercise.
+    def inline_fonts(sheet: str) -> str:
+        keep, dropped = [], 0
+        for block in re.split(r'(?=/\* [a-z-]+ \*/)', sheet):
+            m = re.match(r'/\* ([a-z-]+) \*/', block.strip())
+            if m and 'cyrillic' in m.group(1):
+                dropped += 1
+                continue
+            ref = re.search(r'url\(\.\./fonts/([A-Za-z0-9._-]+)\)', block)
+            if ref:
+                path = ROOT / 'assets/fonts' / ref.group(1)
+                if not path.exists():
+                    print(f'  ! missing font {ref.group(1)}', file=sys.stderr)
+                    continue
+                block = block.replace(f'../fonts/{ref.group(1)}', data_uri(path))
+            keep.append(block)
+        if dropped:
+            print(f'  cyrillic subsets omitted from the artifact ({dropped} faces)')
+        return ''.join(keep)
+
+    fonts = inline_fonts(fonts)
 
     media = pathlib.Path(args.assets) if args.assets else None
 
@@ -122,7 +149,7 @@ def main() -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(
         f'<title>{title}</title>\n'
-        f'<style>\n{css}\n</style>\n'
+        f'<style>\n{fonts}\n{css}\n</style>\n'
         f'{body_html}\n'
         f'<script>window.__INLINE_MEDIA={{{",".join(table)}}};</script>\n'
         f'<script>\n{js}\n</script>\n')

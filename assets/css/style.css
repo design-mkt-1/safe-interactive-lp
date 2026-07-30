@@ -398,22 +398,39 @@ body {
 .lang__menu,
 .footer a { pointer-events: auto; }
 
-/* Header — logo left, language + age right, over a top scrim. */
+/* Header — logo left, language + age right, over a top scrim.
+
+   Out of flow, as the design draws it: the offer card starts at y=75 and rides
+   over the bottom of the 96px-tall bar rather than being pushed below it. */
 .topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  width: 100%;
-  margin: 0 -16px;
   padding: 32px 16px;
-  width: calc(100% + 32px);
   background: linear-gradient(to bottom, rgba(19,20,22,.9), rgba(19,20,22,0));
 }
 
-.brand img { display: block; height: 32px; width: auto; }
+/* The design's box is 138.667x32. Both axes are set rather than letting the
+   width follow the asset's own ratio (which is slightly wider, and rendered
+   145px): an <img> scales an SVG into its box with preserveAspectRatio, so
+   the mark is letterboxed, never stretched. */
+.brand img { display: block; width: 138.667px; height: 32px; }
 
-.topbar__right { display: flex; align-items: center; gap: 10px; }
+/* Reversed so the language chip is always the outermost element, as the
+   design draws it. The 18+ badge is an addition — the Figma has no compliance
+   furniture — so it tucks inside rather than displacing the chip. */
+.topbar__right {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 10px;
+}
 
 .lang { position: relative; }
 
@@ -491,7 +508,9 @@ body {
   width: 100%;
   max-width: var(--shell-max);
   margin: 0 auto;
-  padding: 10px 0 8px;
+  /* 75px is where the design puts the offer block's wrapper, which then adds
+     its own 10px — landing the card at y=85 under the out-of-flow header. */
+  padding: 85px 0 8px;
 }
 
 .panel { animation: rise .55s var(--ease) both; }
@@ -523,9 +542,33 @@ body {
   align-items: center;
 }
 
+/* The countdown card: separate from the offer card on mobile, folded into it
+   on desktop. The CTA is a sibling of the timer block, not a child, because
+   desktop separates them by the card's own 54px rhythm. */
+.card--lock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+}
+
 /* The design carries the logo in the topbar on mobile and at the head of the
    card on desktop — never both. */
 .card__logo { display: none; height: 32px; width: auto; }
+
+/* The design trims every display line to its cap height (Figma's
+   `text-box-trim: trim-both` / `text-box-edge: cap alphabetic`). Without it
+   the ascender and descender slack adds up — the idle card measured 641px
+   against the design's 576. Browsers that do not support `text-box` simply
+   get the untrimmed box and a slightly taller card. */
+.offer__head,
+.offer__sub,
+.reveal__head,
+.reveal__amount,
+.reg__amount,
+.reg__claim,
+.reg__note { text-box: trim-both cap alphabetic; }
 
 .offer__head {
   margin: 0;
@@ -674,7 +717,10 @@ body {
   text-shadow: var(--tb-text-glow);
 }
 
-/* Timer card ------------------------------------------------------------- */
+/* Timer block ------------------------------------------------------------
+   On mobile the design gives this no fill of its own — it is plain content
+   inside the lower card (node 1:1298), which is why there is no background
+   here. Desktop turns it into the boxed panel the design draws there. */
 
 .lockbox {
   display: flex;
@@ -682,9 +728,7 @@ body {
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 12px 8px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, .45);
+  padding: 0 8px;
 }
 
 .lock__line {
@@ -783,6 +827,20 @@ body {
 .reg__note {
   margin: 0;
   font: 500 18px/1.3 var(--tb-display);
+}
+
+/* The claim block is bare on mobile — the design floats it above the card
+   rather than inside one (node 1:1341). Desktop pulls it in. */
+.card--claim {
+  display: flex;
+  flex-direction: column;
+  gap: 17.376px;          /* the design's own value, odd but deliberate */
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .card--form {
@@ -1001,112 +1059,295 @@ body {
 }
 
 /* ==========================================================================
-   Desktop — vault on the left, content column on the right
+   Desktop — vault left, card right
 
-   app.js pins the vault at 30% of the viewport width in landscape, so the
-   right half is free for the card. Keep this breakpoint and VAULT_TARGET
-   .landscape in step: move one without the other and the copy lands on the
-   vault.
+   Everything here is transcribed from the Figma desktop frames (1920x1080):
+   Dynamic 1 node 1:1150, Dynamic 2 node 1:1212, Dynamic 3 node 1:485. Sizes
+   are written as the design's own pixel values multiplied by --fu, so the
+   whole composition scales as one piece instead of each element drifting on
+   its own clamp.
+
+   app.js places the vault so its right edge clears the card's left edge —
+   it measures the card rather than trusting a constant here, so this
+   breakpoint and the video stay in step on their own.
    ========================================================================== */
 
 @media (min-width: 900px) and (orientation: landscape) {
-  /* The design's card is ~42% of the viewport width — far wider than the
-     mobile column — and its type scales with it. Everything below is sized in
-     vw against the 1920 frame the Figma was drawn at, with clamps so it stays
-     sane on a small laptop and stops growing on an ultrawide.
+  :root {
+    /* One pixel of the 1920x1080 Figma frame, in viewport terms.
+       - the vw term reproduces the design exactly on a 16:9 screen
+       - the vh term keeps the tall reveal card (718 design px) inside short
+         landscape windows instead of letting it overflow
+       - the 1.25px ceiling stops the whole thing ballooning past QHD */
+    --fu: min(0.0520833vw, 0.0925926vh, 1.25px);
 
-     Measured off the 1920 frame: the card spans 52.5% -> 94.4% of the
-     viewport, so it is 42vw wide sitting 5.6vw off the right edge. */
-  :root { --shell-max: min(42vw, 840px); }
+    /* Card 820 design px wide, 92 from the right edge (1008 -> 1828 of 1920). */
+    --shell-max: calc(820 * var(--fu));
+  }
 
-  .shell { padding-inline: 5.6vw; }
+  .shell { padding-inline: 4.7917vw; }   /* 92 / 1920 */
+
+  /* The design centres each card on the viewport, not on the space left over
+     below a header. Lifting the bar and the legal line out of the flow puts
+     the card's midpoint back on the 540 line the Figma draws it at. */
+  .topbar, .footer {
+    position: absolute;
+    left: 4.7917vw;
+    right: 4.7917vw;
+    width: auto;
+    margin: 0;
+    padding-inline: 0;
+  }
 
   .topbar {
-    margin: 0 -5.6vw;
-    padding-inline: 5.6vw;
-    width: calc(100% + 11.2vw);
+    top: calc(76 * var(--fu));               /* chip top edge, y=76 */
+    padding-block: 0;
+    background: none;                        /* the design has no desktop scrim */
+  }
+
+  .footer { bottom: 16px; }
+
+  /* Logo moves into the card, so the bar carries only the language control —
+     which the design right-aligns with the card's right edge. */
+  .topbar .brand { display: none; }
+  .topbar { justify-content: flex-end; }
+
+  .lang__btn {
+    gap: calc(8 * var(--fu));
+    padding: calc(8 * var(--fu)) calc(12 * var(--fu));
+    border-radius: calc(8 * var(--fu)) calc(8 * var(--fu)) 0 0;
+    font-size: calc(24 * var(--fu));
+    filter: none;
+  }
+  .lang__caret { width: calc(16 * var(--fu)); height: calc(16 * var(--fu)); }
+
+  /* Open state is drawn as one continuous chip: the trigger keeps square
+     bottom corners and the list hangs off it with no gap. */
+  .lang__menu {
+    top: 100%;
+    min-width: calc(74 * var(--fu));
+    padding: calc(10 * var(--fu)) calc(12 * var(--fu));
+    border-radius: 0 0 calc(8 * var(--fu)) calc(8 * var(--fu));
+    background: var(--tb-ink);
+    box-shadow: none;
+  }
+  .lang__option {
+    padding: calc(4 * var(--fu));
+    border-radius: calc(4 * var(--fu));
+    font-size: calc(24 * var(--fu));
+  }
+
+  .age-badge {
+    width: calc(34 * var(--fu));
+    height: calc(34 * var(--fu));
+    font-size: calc(13 * var(--fu));
   }
 
   .content {
     margin: 0 0 0 auto;
     justify-content: center;
-    padding-bottom: 4vh;
+    padding: 0;
   }
-
-  .card { padding: 0; }
-
-  .card__logo  { height: clamp(34px, 2.9vw, 58px); }
-
-  .offer__head { font-size: clamp(30px, 3.75vw, 72px); }
-  .offer__sub  { font-size: clamp(17px, 1.5vw, 29px); }
-
-  .reveal__head   { font-size: clamp(25px, 2.6vw, 50px); gap: clamp(10px, .95vw, 18px); }
-  .reveal__icon   { width: clamp(34px, 3.1vw, 60px); height: clamp(34px, 3.1vw, 60px);
-                    border-radius: 50%; }
-  .reveal__icon svg { width: 52%; height: 52%; }
-  .reveal__amount { font-size: clamp(48px, 5.7vw, 110px); }
-
-  .lockbox     { padding: clamp(12px, 1.2vw, 22px); gap: clamp(6px, .5vw, 12px);
-                 border-radius: 12px; }
-  .lock__line  { font-size: clamp(13px, 1.05vw, 20px); }
-  .lock__timer { font-size: clamp(26px, 2.15vw, 42px); gap: clamp(8px, .7vw, 14px); }
-  .lock__clock { width: clamp(18px, 1.3vw, 26px); height: clamp(18px, 1.3vw, 26px); }
-
-  .cta      { height: clamp(50px, 4.1vw, 78px);
-              font-size: clamp(16px, 1.35vw, 26px);
-              border-radius: 6px; }
-  .cta-frame { border-radius: 6px; padding: clamp(4px, .35vw, 7px); }
-
-  .card--form { max-width: none; }
-
-  .cta-frame { max-width: 100%; }
-
-  .footer { max-width: none; }
 
   /* The design collapses each state into ONE card on desktop — logo, copy and
      CTA together — with the vault beside it rather than behind it. The panel
-     itself becomes that card and its inner blocks go transparent. */
+     becomes that card and its inner blocks go transparent. */
   .panel--intro,
-  .panel--reveal {
+  .panel--reveal,
+  .panel--register {
+    align-items: center;
     justify-content: flex-start;
-    /* The design runs "150 000 UZS BOR" nearly edge to edge inside the card,
-       which only works with a narrow inset — 44px of padding pushed it onto a
-       third line. Padding and head size are a pair: change one and check the
-       headline still breaks in two. */
-    gap: clamp(16px, 1.55vw, 30px);
-    padding: clamp(18px, 1.55vw, 30px);
-    border-radius: 8px;
+    flex: 0 0 auto;
+    gap: calc(54 * var(--fu));
+    padding: calc(48 * var(--fu)) calc(24 * var(--fu));
+    border-radius: calc(16 * var(--fu));
     background: var(--tb-card);
-    box-shadow: var(--tb-card-glow);
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
-    flex: 0 0 auto;
+  }
+
+  .panel--intro   { box-shadow: 0 4px calc(200 * var(--fu)) 0 rgba(210,21,2,.8); }
+  .panel--reveal  { box-shadow: 0 4px calc(250 * var(--fu)) 0 var(--tb-red); }
+
+  /* Registration is a narrower card in the design — 548 wide against 820 —
+     and denser. Right edge stays put so the card does not jump between
+     states; only the left edge moves in. */
+  .panel--register {
+    width: calc(548 * var(--fu));
+    margin-left: auto;
+    padding-bottom: calc(54 * var(--fu));
+    background: var(--tb-card-solid);
+    box-shadow: 0 4px calc(200 * var(--fu)) 0 rgba(210,21,2,.8);
   }
 
   .panel--intro .card,
-  .panel--reveal .card {
+  .panel--reveal .card,
+  .panel--register .card {
+    width: 100%;
     padding: 0;
+    border-radius: 0;
     background: none;
     box-shadow: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
 
-  .card__logo { display: block; }
-
-  /* Safe here: the vault is at 30%, far from the card. */
+  /* Safe: app.js keeps the vault clear of this card, so it cannot cover the
+     scanner plate. */
   .panel--intro,
-  .panel--reveal { pointer-events: auto; }
+  .panel--reveal,
+  .panel--register { pointer-events: auto; }
 
-  /* Logo moves into the card, so the topbar keeps only the language control. */
-  .topbar .brand { display: none; }
+  /* Idle card — node 1:1150 --------------------------------------------- */
 
-  .intro__action { width: 100%; }
+  .card__logo {
+    display: block;
+    width: calc(266 * var(--fu));
+    height: calc(61 * var(--fu));
+  }
+
+  .card--offer { gap: calc(24 * var(--fu)); }
+
+  .offer__head {
+    font-size: calc(90 * var(--fu));
+    line-height: normal;
+    text-shadow: 0 0 calc(50 * var(--fu)) var(--tb-red), 2px 2px 0 #9A9A9A;
+  }
+
+  .offer__sub {
+    font-size: calc(44 * var(--fu));
+    line-height: normal;
+  }
 
   /* The design sets the subhead in brand red on desktop, white on mobile. */
   .panel--intro .offer__sub { color: var(--tb-red); }
 
-  .card--form { padding: 28px 24px 32px; }
+  /* ...and drops it from the reveal entirely, where the amount carries it. */
+  .offer__sub--reveal { display: none; }
+
+  .intro__action { width: auto; }
+
+  /* Reveal card — node 1:1212 -------------------------------------------- */
+
+  .panel--reveal .card--offer { gap: calc(34 * var(--fu)); }
+
+  .reveal__head {
+    gap: calc(12 * var(--fu));
+    font-size: calc(74 * var(--fu));
+    line-height: normal;
+  }
+
+  .reveal__icon {
+    width: calc(80 * var(--fu));
+    height: calc(80 * var(--fu));
+    border-width: 1px;
+    border-radius: 50%;
+  }
+  .reveal__icon svg { width: calc(40 * var(--fu)); height: calc(40 * var(--fu)); }
+
+  .reveal__amount {
+    font-size: calc(120 * var(--fu));
+    line-height: normal;
+    text-shadow: 0 0 calc(50 * var(--fu)) var(--tb-red), 2px 2px 0 #9A9A9A;
+  }
+
+  /* Desktop boxes the countdown; mobile leaves it bare. */
+  .card--lock { display: contents; }
+
+  .lockbox {
+    width: calc(572 * var(--fu));
+    gap: calc(8 * var(--fu));
+    padding: calc(20 * var(--fu)) calc(32 * var(--fu));
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: calc(20 * var(--fu));
+    background: #161312;
+  }
+
+  .lock__line  { font-size: calc(18 * var(--fu)); font-family: var(--tb-body); }
+  .lock__timer { gap: calc(8 * var(--fu)); font-size: calc(32 * var(--fu)); }
+  .lock__clock { width: calc(18 * var(--fu)); height: calc(18 * var(--fu)); }
+
+  /* Buttons — 528x64 inside a 10px frame, on both idle and reveal --------- */
+
+  /* Shrink to the button rather than the card: the frame is a bezel around a
+     528px button, not a full-width bar. */
+  .cta-frame {
+    width: auto;
+    max-width: none;
+    padding: calc(10 * var(--fu));
+    border-radius: calc(8 * var(--fu));
+  }
+
+  .cta {
+    width: calc(528 * var(--fu));
+    height: calc(64 * var(--fu));
+    border-radius: calc(8 * var(--fu));
+    font-size: calc(26 * var(--fu));
+    text-shadow: 0 1px 0 var(--tb-red-deep);
+  }
+
+  /* Registration card — node 1:485 --------------------------------------- */
+
+  .panel--register .card--claim {
+    gap: calc(24 * var(--fu));
+    text-align: center;
+  }
+
+  .reg__amount {
+    font-size: calc(90 * var(--fu));
+    line-height: normal;
+    text-shadow: 0 0 calc(50 * var(--fu)) var(--tb-red), 2px 2px 0 #9A9A9A;
+  }
+  .reg__claim { font-size: calc(44 * var(--fu)); line-height: normal; }
+  .reg__note  { font-size: calc(28 * var(--fu)); line-height: normal; }
+
+  .panel--register .card--form {
+    max-width: none;
+    padding: 0 calc(8 * var(--fu));
+    text-align: left;
+  }
+
+  .tabs { gap: calc(8 * var(--fu)); margin-bottom: calc(16 * var(--fu)); }
+
+  .tab {
+    gap: calc(10 * var(--fu));
+    height: calc(48 * var(--fu));
+    padding: calc(14 * var(--fu)) calc(12 * var(--fu));
+    border-radius: calc(8 * var(--fu));
+    font-size: calc(16 * var(--fu));
+  }
+  .tab svg { width: calc(24 * var(--fu)); height: calc(24 * var(--fu)); }
+
+  .form { gap: calc(8 * var(--fu)); }
+  .field-row { gap: calc(8 * var(--fu)); }
+
+  .input, .dial, .select {
+    height: calc(46 * var(--fu));
+    border-radius: calc(8 * var(--fu));
+  }
+  .input  { padding: calc(14 * var(--fu)) calc(12 * var(--fu)); font-size: calc(14 * var(--fu)); }
+  .dial   { padding: calc(7 * var(--fu)) calc(12 * var(--fu));  gap: calc(10 * var(--fu)); }
+  .select { padding: calc(6 * var(--fu)) calc(12 * var(--fu));  gap: calc(10 * var(--fu)); }
+
+  .dial__flag  { width: calc(26 * var(--fu)); height: calc(20 * var(--fu));
+                 border-radius: calc(4 * var(--fu)); }
+  .dial__caret,
+  .select__caret { width: calc(10 * var(--fu)); height: calc(10 * var(--fu)); }
+  .select__icon  { width: calc(24 * var(--fu)); height: calc(24 * var(--fu)); }
+  .select__control { font-size: calc(14 * var(--fu)); }
+
+  /* The registration CTA is full-bleed and unframed, unlike the other two. */
+  .form .cta-frame { margin-top: calc(16 * var(--fu)); padding: 0; border: 0; }
+  .form .cta {
+    width: 100%;
+    height: auto;
+    padding: calc(12 * var(--fu)) calc(10 * var(--fu));
+    font-size: calc(20 * var(--fu));
+  }
+
+  .form__note { margin-top: calc(24 * var(--fu)); font-size: calc(14 * var(--fu)); }
+
+  .footer { max-width: none; }
 
   /* The vault sits left, so weight the scrim to the right where the copy is. */
   .stage__vignette {

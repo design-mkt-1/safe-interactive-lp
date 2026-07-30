@@ -151,13 +151,27 @@
   // Landscape puts the vault left of centre so the content card has the right
   // half to itself, per the Figma desktop layout. Portrait stacks instead, so
   // it stays centred with the copy below.
-  // Landscape: measured off the Figma desktop frames, the vault's centre sits
-  // at ~40% of the viewport width, which keeps the whole door in frame with
-  // the card overlapping its right edge. At 30% the door ran off the left.
   var VAULT_TARGET = {
     portrait:  { x: 0.500, y: 0.500 },
-    landscape: { x: 0.400, y: 0.500 }
+    landscape: { x: 0.375, y: 0.500 }   // fallback; normally computed — see below
   };
+
+  // Half the width of the vault's steel frame, as a fraction of the video's
+  // WIDTH — measured off the 16:9 cut, where the door's square spans 37.5% to
+  // 62.5%. Landscape uses it to keep the vault clear of the card.
+  var VAULT_HALF_W = 0.125;
+
+  // How much dark wall to leave between the vault's right edge and the card's
+  // left edge, as a fraction of the viewport width. The Figma desktop frames
+  // leave ~1.9%; a little more reads better against this footage, where the
+  // vault is rendered closer to camera than in the design's background plate.
+  var VAULT_CARD_GAP = 0.025;
+
+  // ...and how much wall to leave on the left, so pushing the vault clear of
+  // the card can never drive the door off the opposite edge. On a tall
+  // landscape window cover-scaling makes the vault wide enough that both
+  // constraints fight; this one wins, and the card simply overlaps a little.
+  var VAULT_MIN_LEFT = 0.02;
 
   // 'video'  — idle state plays vault-idle-*; 'still' — idle state is a static
   // poster and the motion comes from CSS. 'auto' picks 'still' when the idle
@@ -197,6 +211,7 @@
 
   var root        = document.documentElement;
   var stage       = $('stage');
+  var content     = document.querySelector('.content');
   var clipIdle    = $('clipIdle');
   var clipOpen    = $('clipOpen');
   var clipStill   = $('clipStill');
@@ -382,6 +397,34 @@
    * overlays stay glued to the footage by construction.
    * ------------------------------------------------------------------ */
 
+  // Smallest cover geometry that still reaches every edge with the vault
+  // pinned at (tx, ty). Pinning off-centre needs MORE size than plain cover,
+  // because the longer side of the split has to span further.
+  function coverFor(tx, ty, box, aspect, ring) {
+    var wantX = tx * box.width;
+    var wantY = ty * box.height;
+
+    var minW = Math.max(wantX / ring.x, (box.width  - wantX) / (1 - ring.x));
+    var minH = Math.max(wantY / ring.y, (box.height - wantY) / (1 - ring.y));
+
+    var w = Math.max(minW, minH * aspect);
+    var h = w / aspect;
+    if (h < minH) { h = minH; w = h * aspect; }
+
+    return { w: w, h: h, left: wantX - ring.x * w, top: wantY - ring.y * h };
+  }
+
+  // Left edge of the content column, as a fraction of the stage. This is where
+  // the card starts, and the vault is placed to clear it. Measured off
+  // .content rather than the visible panel so the vault does not slide when
+  // the narrower registration card takes over.
+  function columnLeft(box) {
+    if (!content) return null;
+    var r = content.getBoundingClientRect();
+    if (!r.width || r.width >= box.width) return null;   // stacked layout
+    return (r.left - box.left) / box.width;
+  }
+
   function syncOverlay() {
     var box = stage.getBoundingClientRect();
     if (!box.width || !box.height) return;
@@ -399,21 +442,27 @@
     var point  = landscape ? SCAN_POINT.landscape   : SCAN_POINT.portrait;
     var target = landscape ? VAULT_TARGET.landscape : VAULT_TARGET.portrait;
 
-    var wantX = target.x * box.width;
-    var wantY = target.y * box.height;
+    var tx = target.x, ty = target.y;
 
-    // Smallest size that still reaches every edge with the vault pinned at
-    // (wantX, wantY). Pinning off-centre needs MORE size than plain cover,
-    // because the longer side of the split has to span further.
-    var minW = Math.max(wantX / ring.x, (box.width  - wantX) / (1 - ring.x));
-    var minH = Math.max(wantY / ring.y, (box.height - wantY) / (1 - ring.y));
+    // On desktop the vault's x is not a constant — it is wherever it has to be
+    // for the door to stop short of the card. It cannot be solved in one step:
+    // moving the vault left forces the video to scale UP to keep covering the
+    // right edge, which makes the vault wider again. Four passes settle it to
+    // well under a pixel.
+    var colLeft = landscape ? columnLeft(box) : null;
+    if (colLeft != null) {
+      for (var i = 0; i < 4; i++) {
+        var half = VAULT_HALF_W * coverFor(tx, ty, box, aspect, ring).w / box.width;
+        tx = Math.min(0.5, Math.max(VAULT_MIN_LEFT + half,
+                                    colLeft - VAULT_CARD_GAP - half));
+      }
+    }
 
-    var w = Math.max(minW, minH * aspect);
-    var h = w / aspect;
-    if (h < minH) { h = minH; w = h * aspect; }
-
-    var left = wantX - ring.x * w;
-    var top  = wantY - ring.y * h;
+    var g    = coverFor(tx, ty, box, aspect, ring);
+    var w    = g.w;
+    var h    = g.h;
+    var left = g.left;
+    var top  = g.top;
 
     var s = root.style;
     s.setProperty('--vid-x', left.toFixed(2) + 'px');
@@ -437,8 +486,8 @@
     // Published so tooling can assert the vault landed where it was asked to,
     // rather than assuming it should be centred — on desktop it deliberately
     // is not.
-    s.setProperty('--vault-target-x', String(target.x));
-    s.setProperty('--vault-target-y', String(target.y));
+    s.setProperty('--vault-target-x', String(tx));
+    s.setProperty('--vault-target-y', String(ty));
   }
 
   /* ------------------------------------------------------------------ *
