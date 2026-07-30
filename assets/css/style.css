@@ -63,6 +63,23 @@ body {
   overflow: hidden;
   background: var(--tb-ink);
   z-index: 0;
+
+  /* iOS treats a long press on selectable content as "select text", which
+     raises the magnifier loupe and the blue selection handles right on top of
+     the hold-to-scan interaction. The screen-reader label inside the button is
+     enough to trigger it. Suppressing selection and the callout menu across
+     the stage stops that; the copy in .shell stays selectable. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Long-pressing media otherwise offers "Save Image" / "Share". */
+.stage img,
+.stage video {
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
 }
 
 /* A plain full-bleed clipping box. Do NOT give this the footage's aspect
@@ -183,6 +200,9 @@ body {
   cursor: pointer;
   touch-action: none;          /* stop the hold turning into a scroll        */
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none; /* no "copy / look up" menu on long press     */
+  -webkit-user-select: none;   /* no magnifier loupe, no selection handles   */
+  user-select: none;
   z-index: 3;
   transition: opacity .35s var(--ease), transform .35s var(--ease);
 }

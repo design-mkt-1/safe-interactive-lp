@@ -1,47 +1,109 @@
+/**
+ * Verify the overlays stay locked to the same point of the FOOTAGE as the
+ * viewport changes, and that the vault lands on its target position.
+ *
+ *   npm i playwright                       # once
+ *   python3 -m http.server 8000 &
+ *   node tools/check-overlay-alignment.js  # exits non-zero on failure
+ *
+ * Reads the geometry app.js actually published (--vid-*) rather than
+ * recomputing it. Recomputing would only prove the page agrees with a copy of
+ * its own maths — and it silently went stale the moment the placement model
+ * changed from plain cover to focal-point cover.
+ *
+ * This cannot prove the anchor sits on the vault, only that it is stable and
+ * centred. For that, screenshot with the overlay hidden and check the plate
+ * against a coordinate grid; see docs/asset-pipeline.md.
+ */
+
 const { chromium } = require('playwright');
+
+const URL = process.env.URL || 'http://localhost:8000/index.html';
+const CHROME = process.env.CHROME ||
+  '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+
 const SIZES = [
-  [320,568,'iPhone SE'],[360,640,'Android sm'],[375,812,'iPhone X'],
-  [390,844,'iPhone 14'],[414,896,'iPhone Plus'],[430,932,'Pro Max'],
-  [360,780,'Pixel'],[768,1024,'iPad port'],[820,1180,'iPad Air'],
-  [1024,768,'iPad land'],[1280,800,'laptop'],[1440,900,'desktop'],
-  [1600,1200,'4:3 mon'],[1920,1080,'FHD'],[2560,1440,'QHD'],[3440,1440,'ultrawide'],
+  [320, 568, 'iPhone SE'],  [360, 640, 'Android sm'],  [375, 812, 'iPhone X'],
+  [390, 844, 'iPhone 14'],  [414, 896, 'iPhone Plus'], [430, 932, 'Pro Max'],
+  [360, 780, 'Pixel'],      [768, 1024, 'iPad port'],  [820, 1180, 'iPad Air'],
+  [1024, 768, 'iPad land'], [1280, 800, 'laptop'],     [1440, 900, 'desktop'],
+  [1600, 1200, '4:3 mon'],  [1920, 1080, 'FHD'],       [2560, 1440, 'QHD'],
+  [3440, 1440, 'ultrawide'],
 ];
+
+const TOLERANCE = 0.05;   // percent, in video coordinates
+
 (async () => {
-  const b = await chromium.launch({ executablePath:'/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args:['--autoplay-policy=no-user-gesture-required'] });
-  console.log('viewport      label        anchorX_vid%  anchorY_vid%   scanPx   drift');
-  let base = null, worst = 0;
-  for (const [w,h,label] of SIZES) {
-    const ctx = await b.newContext({ viewport:{width:w,height:h} });
-    const p = await ctx.newPage();
-    await p.goto('http://localhost:8000/index.html', { waitUntil:'domcontentloaded' });
-    await p.waitForTimeout(450);
-    const m = await p.evaluate(() => {
+  const browser = await chromium.launch({
+    executablePath: CHROME,
+    args: ['--autoplay-policy=no-user-gesture-required'],
+  });
+
+  console.log('viewport      label         anchor_vid%      vault_screen%     size');
+  const seen = {};
+  let worstDrift = 0, worstCentre = 0;
+
+  for (const [w, h, label] of SIZES) {
+    const ctx = await browser.newContext({ viewport: { width: w, height: h } });
+    const page = await ctx.newPage();
+    await page.goto(URL, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(450);
+
+    const m = await page.evaluate(() => {
+      const cs = getComputedStyle(document.documentElement);
+      const num = n => parseFloat(cs.getPropertyValue(n));
       const stage = document.getElementById('stage').getBoundingClientRect();
       const s = document.getElementById('scanner').getBoundingClientRect();
-      const v = document.getElementById('clipIdle');
-      const land = window.matchMedia('(orientation: landscape)').matches && innerWidth>=900;
-      const aspect = (v.videoWidth&&v.videoHeight) ? v.videoWidth/v.videoHeight : (land?16/9:9/16);
-      // recompute cover geometry independently, then express the scanner
-      // centre as a fraction of the VIDEO's own rendered area
-      let vw,vh;
-      if (stage.width/stage.height > aspect){ vw=stage.width; vh=stage.width/aspect; }
-      else { vh=stage.height; vw=stage.height*aspect; }
-      const ox=(stage.width-vw)/2, oy=(stage.height-vh)/2;
-      const cx = (s.x + s.width/2  - stage.x - ox) / vw;
-      const cy = (s.y + s.height/2 - stage.y - oy) / vh;
-      return {cx, cy, size:s.width, land};
+
+      // where the video actually is, as published by app.js
+      const vx = num('--vid-x'), vy = num('--vid-y');
+      const vw = num('--vid-w'), vh = num('--vid-h');
+
+      const cx = s.x + s.width / 2 - stage.x;
+      const cy = s.y + s.height / 2 - stage.y;
+
+      return {
+        fx: (cx - vx) / vw,          // anchor as a fraction of the footage
+        fy: (cy - vy) / vh,
+        sx: cx / stage.width,        // and as a fraction of the screen
+        sy: cy / stage.height,
+        size: s.width,
+        landscape: matchMedia('(orientation: landscape)').matches && innerWidth >= 900,
+      };
     });
-    const key = m.land ? 'L' : 'P';
-    if (!base) base = {};
-    if (base[key] === undefined) base[key] = [m.cx, m.cy];
-    const dx = Math.abs(m.cx - base[key][0])*100, dy = Math.abs(m.cy - base[key][1])*100;
-    const drift = Math.max(dx,dy); if (drift>worst) worst=drift;
+
+    const key = m.landscape ? 'landscape' : 'portrait';
+    if (!seen[key]) seen[key] = [m.fx, m.fy];
+
+    const drift = Math.max(Math.abs(m.fx - seen[key][0]),
+                           Math.abs(m.fy - seen[key][1])) * 100;
+    const offCentre = Math.abs(m.sx - 0.5) * 100;
+    worstDrift = Math.max(worstDrift, drift);
+    worstCentre = Math.max(worstCentre, offCentre);
+
     console.log(
-      String(w+'x'+h).padEnd(13), label.padEnd(12),
-      (m.cx*100).toFixed(3).padStart(11), (m.cy*100).toFixed(3).padStart(13),
-      m.size.toFixed(0).padStart(8), (drift.toFixed(4)+'%').padStart(10));
+      `${w}x${h}`.padEnd(13), label.padEnd(13),
+      `${(m.fx * 100).toFixed(2)}, ${(m.fy * 100).toFixed(2)}`.padEnd(16),
+      `${(m.sx * 100).toFixed(2)}, ${(m.sy * 100).toFixed(2)}`.padEnd(17),
+      m.size.toFixed(0).padStart(5));
+
     await ctx.close();
   }
-  console.log('\n>>> WORST DRIFT IN VIDEO COORDINATES: ' + worst.toFixed(4) + '%');
-  await b.close();
+
+  await browser.close();
+
+  console.log(`\nworst drift in video coordinates : ${worstDrift.toFixed(4)}%`);
+  console.log(`worst horizontal off-centre      : ${worstCentre.toFixed(4)}%`);
+
+  let failed = false;
+  if (worstDrift > TOLERANCE) {
+    console.error(`\nFAIL: overlays are not tracking the footage (> ${TOLERANCE}%)`);
+    failed = true;
+  }
+  if (worstCentre > TOLERANCE) {
+    console.error(`FAIL: the vault is not horizontally centred (> ${TOLERANCE}%)`);
+    failed = true;
+  }
+  if (failed) process.exit(1);
+  console.log('\nPASS');
 })();

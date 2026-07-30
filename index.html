@@ -73,7 +73,10 @@
           <path d="M5.5 16.5A11 11 0 0 0 6 13"/>
         </svg>
       </span>
-      <span class="visually-hidden" id="scannerLabel">Press and hold to unlock the vault</span>
+      <!-- No inner text label here: app.js sets aria-label on the button,
+           which overrides inner text for accessibility naming anyway, and a
+           text node inside the button is what iOS offers to select on a long
+           press — raising the magnifier over the interaction. -->
     </button>
 
   </div>
