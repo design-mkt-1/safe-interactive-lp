@@ -90,7 +90,7 @@
   // not, so the vault drifted a few percent off. These pin the vault itself.
   // Portrait puts it slightly above the middle to leave the copy room below.
   var VAULT_TARGET = {
-    portrait:  { x: 0.500, y: 0.430 },
+    portrait:  { x: 0.500, y: 0.500 },
     landscape: { x: 0.500, y: 0.500 }
   };
 
