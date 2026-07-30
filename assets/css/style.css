@@ -24,9 +24,13 @@
   --ov-w: 100vw;
   --ov-h: 100vh;
 
-  /* Sized against the video rather than the viewport, so the target grows
-     and shrinks with the vault instead of drifting off it. */
-  --scan-size: clamp(72px, calc(var(--ov-w) * 0.17), 190px);
+  /* --plate-size is the vault's scanner plate at its on-screen size, measured
+     from the footage and published by app.js. The visible ring matches it
+     exactly. The hit area is floored at 56px separately, because the plate can
+     render smaller than a fingertip — especially on the landscape cut, where
+     the vault sits much further back in frame. */
+  --plate-size: 64px;
+  --scan-size: max(var(--plate-size), 56px);
 
   --ease: cubic-bezier(.22,.61,.36,1);
   --shell-max: 460px;
@@ -212,11 +216,15 @@ body {
   outline-offset: 6px;
 }
 
+/* Matches the plate, not the hit area, so the outline sits exactly on the
+   brackets in the footage even when the target is padded out for fingers. */
 .scanner__ring {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  left: 50%;
+  top: 50%;
+  width: var(--plate-size);
+  height: var(--plate-size);
+  transform: translate(-50%, -50%);
 }
 
 .scanner__track,
@@ -238,7 +246,7 @@ body {
 
 .scanner__pad {
   position: relative;
-  width: 46%;
+  width: calc(var(--plate-size) * 0.5);
   color: #fff;
   opacity: .9;
   filter: drop-shadow(0 0 8px var(--tb-red-hot));
@@ -282,8 +290,12 @@ body {
 .scanner::after {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
+  left: 50%;
+  top: 50%;
+  width: var(--plate-size);
+  height: var(--plate-size);
+  margin: calc(var(--plate-size) / -2) 0 0 calc(var(--plate-size) / -2);
+  border-radius: 16px;
   border: 1.5px solid rgba(255, 92, 64, .55);
   animation: ripple 2.8s ease-out infinite;
   pointer-events: none;

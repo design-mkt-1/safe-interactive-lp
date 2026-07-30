@@ -72,16 +72,23 @@
   // Do not derive these from a red-pixel centroid: the floor reflection and
   // the equipment lights drag it badly off, and a search window clipped to
   // avoid them just returns its own boundaries.
+  // `d` is the plate's on-screen size as a fraction of the video's WIDTH, so
+  // the overlay ring matches the plate instead of floating at some arbitrary
+  // size. It differs sharply between the cuts — the portrait crop frames the
+  // vault much larger — which is why a single shared value could never fit.
   var SCAN_POINT = {
-    portrait:  { x: 0.477, y: 0.492 },
-    landscape: { x: 0.505, y: 0.492 }
+    portrait:  { x: 0.4635, y: 0.5019, d: 0.1305 },
+    landscape: { x: 0.4998, y: 0.5024, d: 0.0387 }
   };
 
   // Same coordinate system; `d` is the ring's diameter as a fraction of the
   // video's WIDTH, so it differs between the two cuts of the same footage.
+  // The neon ring shares the plate's centre — it is the same vault door — so
+  // these track SCAN_POINT. This point is also the focus the whole frame is
+  // centred on, so a correction here moves the vault, not just the overlay.
   var RING_POINT = {
-    portrait:  { x: 0.477, y: 0.492, d: 0.664 },
-    landscape: { x: 0.505, y: 0.492, d: 0.210 }
+    portrait:  { x: 0.4635, y: 0.5019, d: 0.664 },
+    landscape: { x: 0.4998, y: 0.5024, d: 0.210 }
   };
 
   // Where the vault should sit on screen, as a fraction of the viewport.
@@ -266,6 +273,11 @@
     s.setProperty('--ring-x', (left + ring.x * w).toFixed(2) + 'px');
     s.setProperty('--ring-y', (top  + ring.y * h).toFixed(2) + 'px');
     s.setProperty('--ring-d', (ring.d * w).toFixed(2) + 'px');
+
+    // Visual size of the plate. The touch target is derived from this in CSS
+    // but floored separately, so the ring can match a small plate without
+    // leaving a target too small to hit.
+    s.setProperty('--plate-size', (point.d * w).toFixed(2) + 'px');
   }
 
   /* ------------------------------------------------------------------ *
