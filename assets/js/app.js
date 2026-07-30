@@ -16,44 +16,51 @@
    * ------------------------------------------------------------------ */
 
   var COPY = {
-    en: {
-      headline:    'Your welcome package is sealed.',
-      subhead:     'It is locked to this device. Unlock the vault to see what is inside.',
-      hint:        'Press and hold to scan',
-      hintHolding: 'Hold…',
-      granted:     'Access granted',
+    uz: {
+      // idle
+      offerLine1: 'SEYFDA',
+      offerLine2: '150 000 UZS BOR',
+      offerSub:   'Yutug\u2018ingizni ko\u2018paytiring',
+      openVault:  'SEYFNI OCHISH',
+      hint:        'Skanerni bosib turing',
+      hintHolding: 'Ushlab turing\u2026',
+      granted:     'Ruxsat berildi',
 
-      revealKicker: 'Vault open',
-      offerPrimary:   '100% BONUS',
-      offerSecondary: '+ 250 free spins',
+      // reveal
+      revealKicker:   'SEYF OCHILDI!',
+      offerPrimary:   '55 000 UZS',
+      offerSecondary: 'Yutug\u2018ingizni ko\u2018paytiring',
+      lockLabel:   'Sizda 10 daqiqa bor',
+      lockSub:     '55 000 UZSni olish uchun ro\u2018yxatdan o\u2018ting',
+      lockExpired: 'Muddat tugadi',
+      toRegister:  'DAVOM ETISH',
 
-      lockLabel:  'Reserved for this device for',
-      lockExpired: 'Reservation expired',
+      // register
+      regAmount: '55 000 UZS.',
+      regClaim:  'ALLAQACHON SIZNIKI!',
+      regNote:   'Faqat ro\u2018yxatdan o\u2018tish qoldi',
+      tabPhone:  'Mobil telefon',
+      tabEmail:  'Elektron pochta',
+      phonePlaceholder: '90-000-00-00',
+      emailPlaceholder: 'email@example.com',
+      bonusOptions: ['Casino bonusi', 'Sport bonusi', 'Bonussiz'],
+      submit:   'DAVOM ETISH',
+      formNote: 'Hisobingiz bormi? <a href="#login">Kirish</a>',
 
-      toRegister: 'Claim my bonus',
+      errPhone: 'Telefon raqamingizni kiriting.',
+      errEmail: 'Elektron pochtangizni kiriting.',
+      errEmailInvalid: 'Elektron pochta manzili noto\u2018g\u2018ri.',
 
-      formTitle:  'Create your account',
-      lblEmail:   'Email address',
-      lblPassword:'Password',
-      lblTerms:   'I am 18 or over and I accept the <a href="#terms">Terms &amp; Conditions</a> and <a href="#privacy">Privacy Policy</a>.',
-      submit:     'Register now',
-      formNote:   'Your bonus is applied automatically after your first deposit.',
-
-      errEmailRequired: 'Please enter your email address.',
-      errEmailInvalid:  'That does not look like a valid email address.',
-      errPassword:      'Password must be at least 8 characters.',
-      errTerms:         'You must confirm your age and accept the terms.',
-
-      tapStart:   'Tap to begin',
+      tapStart: 'Boshlash uchun bosing',
 
       footerLegal:
-        'Topbet. Gambling can be addictive — please play responsibly. ' +
-        '18+ only. <a href="#responsible">Responsible gambling</a> · ' +
-        '<a href="#terms">Terms apply</a>'
+        'Topbet. Qimor o\u2018yinlari qaramlik keltirishi mumkin \u2014 mas\u2019uliyat bilan o\u2018ynang. ' +
+        'Faqat 18+. <a href="#responsible">Mas\u2019uliyatli o\u2018yin</a> \u00b7 ' +
+        '<a href="#terms">Shartlar amal qiladi</a>'
     }
   };
 
-  var ACTIVE_LOCALE = 'en';
+  var ACTIVE_LOCALE = 'uz';
   var t = COPY[ACTIVE_LOCALE];
 
   /* ------------------------------------------------------------------ *
@@ -96,9 +103,12 @@
   // vault if the vault happens to sit dead centre of the footage — it does
   // not, so the vault drifted a few percent off. These pin the vault itself.
   // Portrait puts it slightly above the middle to leave the copy room below.
+  // Landscape puts the vault left of centre so the content card has the right
+  // half to itself, per the Figma desktop layout. Portrait stacks instead, so
+  // it stays centred with the copy below.
   var VAULT_TARGET = {
     portrait:  { x: 0.500, y: 0.500 },
-    landscape: { x: 0.500, y: 0.500 }
+    landscape: { x: 0.300, y: 0.500 }
   };
 
   // 'video'  — idle state plays vault-idle-*; 'still' — idle state is a static
@@ -113,7 +123,7 @@
   var CROSSFADE_MS  = 420;
 
   var HOLD_MS       = 1600;               // how long the user must hold
-  var LOCK_MINUTES  = 15;                 // bonus reservation window
+  var LOCK_MINUTES  = 10;                 // bonus reservation window
   var LOCK_KEY      = 'topbet.vault.lockUntil';
   var RING_LENGTH   = 335;                // scanner plate perimeter, matches the SVG
 
@@ -151,6 +161,13 @@
   var lockTimer   = $('lockTimer');
   var tapStart    = $('tapStart');
   var form        = $('regForm');
+  var openVault   = $('openVault');
+  var tabPhone    = $('tabPhone');
+  var tabEmail    = $('tabEmail');
+  var rowPhone    = $('rowPhone');
+  var rowEmail    = $('rowEmail');
+
+  var contactMode = 'phone';   // which of the two the visitor is filling in
 
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -159,27 +176,63 @@
    * ------------------------------------------------------------------ */
 
   function paint() {
-    $('headline').textContent    = t.headline;
-    $('subhead').textContent     = t.subhead;
-    $('scanHint').textContent    = t.hint;
+    $('offerLine1').textContent = t.offerLine1;
+    $('offerLine2').textContent = t.offerLine2;
+    $('offerSub').textContent   = t.offerSub;
+    openVault.textContent       = t.openVault;
+    $('scanHint').textContent   = t.hint;
     $('grantedText').textContent = t.granted;
 
     $('revealKicker').textContent   = t.revealKicker;
     $('offerPrimary').textContent   = t.offerPrimary;
     $('offerSecondary').textContent = t.offerSecondary;
     $('lockLabel').textContent      = t.lockLabel;
+    $('lockSub').textContent        = t.lockSub;
     $('toRegister').textContent     = t.toRegister;
 
-    $('formTitle').textContent  = t.formTitle;
-    $('lblEmail').textContent   = t.lblEmail;
-    $('lblPassword').textContent= t.lblPassword;
-    $('lblTerms').innerHTML     = t.lblTerms;
-    $('submitBtn').textContent  = t.submit;
-    $('formNote').textContent   = t.formNote;
+    $('regAmount').textContent = t.regAmount;
+    $('regClaim').textContent  = t.regClaim;
+    $('regNote').textContent   = t.regNote;
+    $('tabPhoneText').textContent = t.tabPhone;
+    $('tabEmailText').textContent = t.tabEmail;
+    $('fPhone').placeholder = t.phonePlaceholder;
+    $('fEmail').placeholder = t.emailPlaceholder;
+
+    var sel = $('fBonus');
+    sel.innerHTML = '';
+    t.bonusOptions.forEach(function (label, i) {
+      var o = document.createElement('option');
+      o.value = String(i); o.textContent = label;
+      sel.appendChild(o);
+    });
+
+    $('submitBtn').textContent = t.submit;
+    $('formNote').innerHTML    = t.formNote;
     $('tapStartText').textContent = t.tapStart;
-    $('footerLegal').innerHTML  = t.footerLegal;
+    $('footerLegal').innerHTML = t.footerLegal;
 
     scanner.setAttribute('aria-label', t.hint);
+    openVault.setAttribute('aria-label', t.openVault);
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Contact method tabs
+   * ------------------------------------------------------------------ */
+
+  function setContactMode(mode) {
+    contactMode = mode;
+    var phone = mode === 'phone';
+
+    tabPhone.classList.toggle('is-active', phone);
+    tabEmail.classList.toggle('is-active', !phone);
+    tabPhone.setAttribute('aria-selected', String(phone));
+    tabEmail.setAttribute('aria-selected', String(!phone));
+
+    rowPhone.hidden = !phone;
+    rowEmail.hidden = phone;
+
+    // Clear the hidden field's error so a stale message cannot block submit.
+    $(phone ? 'errEmail' : 'errPhone').textContent = '';
   }
 
   /* ------------------------------------------------------------------ *
@@ -278,6 +331,12 @@
     // but floored separately, so the ring can match a small plate without
     // leaving a target too small to hit.
     s.setProperty('--plate-size', (point.d * w).toFixed(2) + 'px');
+
+    // Published so tooling can assert the vault landed where it was asked to,
+    // rather than assuming it should be centred — on desktop it deliberately
+    // is not.
+    s.setProperty('--vault-target-x', String(target.x));
+    s.setProperty('--vault-target-y', String(target.y));
   }
 
   /* ------------------------------------------------------------------ *
@@ -453,20 +512,17 @@
   }
 
   function validate() {
-    var email = $('fEmail').value.trim();
-    var pass  = $('fPassword').value;
-    var terms = $('fTerms').checked;
-    var ok    = true;
+    var ok = true;
 
-    if (!email)                          ok = setError('fEmail', 'errEmail', t.errEmailRequired) && ok;
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))
-                                         ok = setError('fEmail', 'errEmail', t.errEmailInvalid) && ok;
-    else                                 ok = setError('fEmail', 'errEmail', '') && ok;
-
-    ok = setError('fPassword', 'errPassword', pass.length >= 8 ? '' : t.errPassword) && ok;
-
-    $('errTerms').textContent = terms ? '' : t.errTerms;
-    if (!terms) ok = false;
+    if (contactMode === 'phone') {
+      var digits = $('fPhone').value.replace(/\D/g, '');
+      ok = setError('fPhone', 'errPhone', digits.length >= 7 ? '' : t.errPhone) && ok;
+    } else {
+      var email = $('fEmail').value.trim();
+      var msg = !email ? t.errEmail
+              : /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) ? '' : t.errEmailInvalid;
+      ok = setError('fEmail', 'errEmail', msg) && ok;
+    }
 
     return ok;
   }
@@ -481,9 +537,11 @@
        Deliberately left inert — no endpoint is invented here.
        ------------------------------------------------------------------ */
     var payload = {
-      email:    $('fEmail').value.trim(),
-      password: $('fPassword').value,
-      terms:    $('fTerms').checked
+      method:  contactMode,
+      contact: contactMode === 'phone'
+        ? '+998' + $('fPhone').value.replace(/\D/g, '')
+        : $('fEmail').value.trim(),
+      bonus:   $('fBonus').options[$('fBonus').selectedIndex].text
     };
     console.log('[topbet] registration submitted', payload);
 
@@ -498,6 +556,7 @@
 
   function boot() {
     paint();
+    setContactMode('phone');
     root.style.setProperty('--clip-fade', CROSSFADE_MS + 'ms');
     pickSources();
     syncOverlay();
@@ -570,6 +629,17 @@
   });
 
   $('toRegister').addEventListener('click', toRegister);
+
+  // CTA #2 — the tap alternative to holding the scanner. Same destination, so
+  // the interaction is discoverable for anyone who does not try a long press.
+  openVault.addEventListener('click', function () {
+    if (state !== 'idle' && state !== 'scanning') return;
+    if (holdRAF) { cancelAnimationFrame(holdRAF); holdRAF = null; }
+    unlock();
+  });
+
+  tabPhone.addEventListener('click', function () { setContactMode('phone'); });
+  tabEmail.addEventListener('click', function () { setContactMode('email'); });
 
   function onViewportChange() {
     pickSources();

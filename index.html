@@ -1,13 +1,17 @@
 <!DOCTYPE html>
-<html lang="en" data-state="loading">
+<html lang="uz" data-state="loading">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Topbet — Unlock Your Welcome Vault</title>
-<meta name="description" content="Your Topbet welcome package is sealed in the vault. Scan to unlock it.">
-<meta name="theme-color" content="#0A0A0C">
+<title>Topbet — Seyfni oching</title>
+<meta name="description" content="Seyfda 150 000 UZS bor. Yutug'ingizni ko'paytiring.">
+<meta name="theme-color" content="#131416">
 <meta name="robots" content="noindex">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230A0A0C'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23D21502' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23131416'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23D21502' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fira+Sans+Condensed:wght@500;600;700;800&family=Montserrat:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -45,16 +49,15 @@
          src="assets/img/poster-open.jpg" alt="" aria-hidden="true">
 
     <!-- Live glow drawn over the vault's baked neon ring. Anchored to the
-         footage by the same cover geometry as the scanner, so it holds at
-         any viewport. Carries the idle pulse when the idle state is a still. -->
+         footage by the same geometry as the scanner. Carries the idle pulse
+         when the idle state is a still. -->
     <span class="vaultfx" id="vaultFx" aria-hidden="true"></span>
 
-    <!-- Hold-to-scan target. Sits over the vault's scanner plate.
-         Position comes from SCAN_POINT in app.js, resolved to --ov-x/--ov-y. -->
+    <!-- Hold-to-scan target, CTA #1. Sits on the vault's scanner plate;
+         position and size come from SCAN_POINT in app.js. -->
     <button class="scanner" id="scanner" type="button"
             aria-describedby="scanHint">
-      <!-- Traces the perimeter of the vault's square scanner plate, matching
-           the corner brackets in the artwork. -->
+      <!-- Traces the perimeter of the plate, matching the brackets in the art. -->
       <svg class="scanner__ring" viewBox="0 0 100 100" aria-hidden="true">
         <rect class="scanner__track" x="6" y="6" width="88" height="88" rx="10"></rect>
         <rect class="scanner__progress" id="scanProgress"
@@ -73,10 +76,9 @@
           <path d="M5.5 16.5A11 11 0 0 0 6 13"/>
         </svg>
       </span>
-      <!-- No inner text label here: app.js sets aria-label on the button,
-           which overrides inner text for accessibility naming anyway, and a
-           text node inside the button is what iOS offers to select on a long
-           press — raising the magnifier over the interaction. -->
+      <!-- No inner text label: app.js sets aria-label, which overrides inner
+           text for accessibility naming, and a text node inside the button is
+           what iOS offers to select on a long press. -->
     </button>
 
   </div>
@@ -89,19 +91,42 @@
 <div class="shell">
 
   <header class="topbar">
-    <a class="brand" href="#" aria-label="Topbet home">
-      <img src="assets/img/logo_topbet.svg" alt="Topbet" width="136" height="30">
+    <a class="brand" href="#" aria-label="Topbet">
+      <img src="assets/img/logo_topbet.svg" alt="Topbet" width="139" height="32">
     </a>
-    <span class="age-badge" aria-label="Eighteen plus only">18+</span>
+    <div class="topbar__right">
+      <button class="lang" id="langBtn" type="button" aria-haspopup="true" aria-expanded="false">
+        <span id="langCurrent">EN</span>
+        <svg class="lang__caret" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor"
+                stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <span class="age-badge" aria-label="18+">18+</span>
+    </div>
   </header>
 
   <main class="content">
 
     <!-- IDLE ------------------------------------------------- -->
     <section class="panel panel--intro" id="panelIntro">
-      <h1 class="headline" id="headline"></h1>
-      <p class="subhead" id="subhead"></p>
-      <p class="hint" id="scanHint"></p>
+      <div class="card card--offer">
+        <p class="offer__head">
+          <span id="offerLine1"></span>
+          <span id="offerLine2"></span>
+        </p>
+        <p class="offer__sub" id="offerSub"></p>
+      </div>
+
+      <!-- CTA #2 — the tap alternative to holding the scanner. Grouped so it
+           can be pushed clear of the vault's plate, which sits mid-screen and
+           carries CTA #1. -->
+      <div class="intro__action">
+        <div class="cta-frame">
+          <button class="cta" id="openVault" type="button"></button>
+        </div>
+        <p class="hint" id="scanHint"></p>
+      </div>
     </section>
 
     <!-- GRANTED ---------------------------------------------- -->
@@ -115,48 +140,120 @@
 
     <!-- REVEAL ----------------------------------------------- -->
     <section class="panel panel--reveal" id="panelReveal" hidden>
-      <p class="reveal__kicker" id="revealKicker"></p>
-      <p class="reveal__offer">
-        <span class="reveal__big" id="offerPrimary"></span>
-        <span class="reveal__plus" id="offerSecondary"></span>
-      </p>
-      <div class="lock" id="lockBox">
-        <p class="lock__label" id="lockLabel"></p>
-        <p class="lock__timer" id="lockTimer">15:00</p>
+      <div class="card card--offer">
+        <p class="reveal__head">
+          <span class="reveal__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2.6l1.9 5.1 5.1 1.9-5.1 1.9L12 16.6l-1.9-5.1L5 9.6l5.1-1.9L12 2.6z"/>
+              <path d="M18.6 15.2l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9.9-2.3z"/>
+              <path d="M5.2 14.4l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8z"/>
+            </svg>
+          </span>
+          <span id="revealKicker"></span>
+        </p>
+        <p class="reveal__amount" id="offerPrimary"></p>
+        <p class="offer__sub" id="offerSecondary"></p>
       </div>
-      <button class="cta" id="toRegister" type="button"></button>
+
+      <div class="card card--lock" id="lockBox">
+        <p class="lock__line" id="lockLabel"></p>
+        <p class="lock__line" id="lockSub"></p>
+        <p class="lock__timer">
+          <svg class="lock__clock" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.2 1.9"/>
+          </svg>
+          <span id="lockTimer">10:00</span>
+        </p>
+        <div class="cta-frame">
+          <button class="cta" id="toRegister" type="button"></button>
+        </div>
+      </div>
     </section>
 
     <!-- REGISTER --------------------------------------------- -->
     <section class="panel panel--register" id="panelRegister" hidden>
-      <h2 class="card__title" id="formTitle"></h2>
+      <p class="reg__amount" id="regAmount"></p>
+      <p class="reg__claim" id="regClaim"></p>
+      <p class="reg__note" id="regNote"></p>
 
-      <form class="form" id="regForm" novalidate>
-        <div class="field">
-          <label for="fEmail" id="lblEmail"></label>
-          <input type="email" id="fEmail" name="email" autocomplete="email"
-                 required aria-describedby="errEmail">
+      <div class="card card--form">
+        <div class="tabs" role="tablist">
+          <button class="tab is-active" id="tabPhone" type="button" role="tab"
+                  aria-selected="true" data-mode="phone">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M6.6 2.8a1.7 1.7 0 0 1 2.4.5l1.6 2.5a1.7 1.7 0 0 1-.3 2.2l-1.2 1a11 11 0 0 0 4.4 4.4l1-1.2a1.7 1.7 0 0 1 2.2-.3l2.5 1.6a1.7 1.7 0 0 1 .5 2.4l-1 1.5c-.7 1-2 1.4-3.2 1A18.6 18.6 0 0 1 3.9 7.5c-.4-1.2 0-2.5 1-3.2l1.7-1.5z"/>
+            </svg>
+            <span id="tabPhoneText"></span>
+          </button>
+          <button class="tab" id="tabEmail" type="button" role="tab"
+                  aria-selected="false" data-mode="email">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/>
+              <path d="m3 7 8.2 5.6a1.5 1.5 0 0 0 1.6 0L21 7"/>
+            </svg>
+            <span id="tabEmailText"></span>
+          </button>
+        </div>
+
+        <form class="form" id="regForm" novalidate>
+
+          <!-- phone mode -->
+          <div class="field-row" id="rowPhone">
+            <button class="dial" id="dialBtn" type="button" aria-label="+998 (UZ)">
+              <span class="dial__flag" aria-hidden="true">
+                <svg viewBox="0 0 30 20">
+                  <rect width="30" height="6.4" fill="#0099b5"/>
+                  <rect y="6.4" width="30" height="1" fill="#ce1126"/>
+                  <rect y="7.4" width="30" height="5.2" fill="#fff"/>
+                  <rect y="12.6" width="30" height="1" fill="#ce1126"/>
+                  <rect y="13.6" width="30" height="6.4" fill="#1eb53a"/>
+                  <circle cx="6.6" cy="3.4" r="2.2" fill="#fff"/>
+                  <circle cx="7.5" cy="3.4" r="2.2" fill="#0099b5"/>
+                </svg>
+              </span>
+              <svg class="dial__caret" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor"
+                      stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <input class="input" type="tel" id="fPhone" name="phone"
+                   inputmode="tel" autocomplete="tel-national"
+                   aria-describedby="errPhone">
+          </div>
+          <p class="err" id="errPhone" role="alert"></p>
+
+          <!-- email mode -->
+          <div class="field-row" id="rowEmail" hidden>
+            <input class="input" type="email" id="fEmail" name="email"
+                   autocomplete="email" aria-describedby="errEmail">
+          </div>
           <p class="err" id="errEmail" role="alert"></p>
-        </div>
 
-        <div class="field">
-          <label for="fPassword" id="lblPassword"></label>
-          <input type="password" id="fPassword" name="password"
-                 autocomplete="new-password" required minlength="8"
-                 aria-describedby="errPassword">
-          <p class="err" id="errPassword" role="alert"></p>
-        </div>
+          <div class="field-row">
+            <span class="select">
+              <svg class="select__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="8" width="18" height="4" rx="1"/>
+                <path d="M5 12v8h14v-8M12 8v12"/>
+                <path d="M12 8S10.5 4 8.5 4a2 2 0 0 0 0 4M12 8s1.5-4 3.5-4a2 2 0 0 1 0 4"/>
+              </svg>
+              <select class="select__control" id="fBonus" name="bonus"></select>
+              <svg class="select__caret" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor"
+                      stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </div>
 
-        <div class="field field--check">
-          <input type="checkbox" id="fTerms" name="terms" required
-                 aria-describedby="errTerms">
-          <label for="fTerms" id="lblTerms"></label>
-          <p class="err" id="errTerms" role="alert"></p>
-        </div>
+          <div class="cta-frame cta-frame--flat">
+            <button class="cta" type="submit" id="submitBtn"></button>
+          </div>
 
-        <button class="cta cta--submit" type="submit" id="submitBtn"></button>
-        <p class="form__note" id="formNote"></p>
-      </form>
+          <p class="form__note" id="formNote"></p>
+        </form>
+      </div>
     </section>
 
   </main>

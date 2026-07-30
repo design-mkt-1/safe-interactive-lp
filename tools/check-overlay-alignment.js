@@ -1,6 +1,8 @@
 /**
  * Verify the overlays stay locked to the same point of the FOOTAGE as the
- * viewport changes, and that the vault lands on its target position.
+ * viewport changes, and that the vault lands on the target position declared in VAULT_TARGET
+ * — which is deliberately off-centre on desktop, so this checks against the
+ * declared value rather than assuming the middle.
  *
  *   npm i playwright                       # once
  *   python3 -m http.server 8000 &
@@ -67,6 +69,8 @@ const TOLERANCE = 0.05;   // percent, in video coordinates
         fy: (cy - vy) / vh,
         sx: cx / stage.width,        // and as a fraction of the screen
         sy: cy / stage.height,
+        tx: num('--vault-target-x'), // where app.js was asked to put it
+        ty: num('--vault-target-y'),
         size: s.width,
         landscape: matchMedia('(orientation: landscape)').matches && innerWidth >= 900,
       };
@@ -77,9 +81,9 @@ const TOLERANCE = 0.05;   // percent, in video coordinates
 
     const drift = Math.max(Math.abs(m.fx - seen[key][0]),
                            Math.abs(m.fy - seen[key][1])) * 100;
-    const offCentre = Math.abs(m.sx - 0.5) * 100;
+    const offTarget = Math.max(Math.abs(m.sx - m.tx), Math.abs(m.sy - m.ty)) * 100;
     worstDrift = Math.max(worstDrift, drift);
-    worstCentre = Math.max(worstCentre, offCentre);
+    worstCentre = Math.max(worstCentre, offTarget);
 
     console.log(
       `${w}x${h}`.padEnd(13), label.padEnd(13),
@@ -93,15 +97,24 @@ const TOLERANCE = 0.05;   // percent, in video coordinates
   await browser.close();
 
   console.log(`\nworst drift in video coordinates : ${worstDrift.toFixed(4)}%`);
-  console.log(`worst horizontal off-centre      : ${worstCentre.toFixed(4)}%`);
+  console.log(`worst deviation from target       : ${worstCentre.toFixed(4)}%`);
 
   let failed = false;
+
+  // NaN fails every comparison, so an unreadable measurement would slip past
+  // both checks below and report PASS having verified nothing.
+  if (!Number.isFinite(worstDrift) || !Number.isFinite(worstCentre)) {
+    console.error('\nFAIL: measurement produced NaN — the page did not publish ' +
+                  'the expected custom properties');
+    process.exit(1);
+  }
+
   if (worstDrift > TOLERANCE) {
     console.error(`\nFAIL: overlays are not tracking the footage (> ${TOLERANCE}%)`);
     failed = true;
   }
   if (worstCentre > TOLERANCE) {
-    console.error(`FAIL: the vault is not horizontally centred (> ${TOLERANCE}%)`);
+    console.error(`FAIL: the vault is not landing on its declared target (> ${TOLERANCE}%)`);
     failed = true;
   }
   if (failed) process.exit(1);

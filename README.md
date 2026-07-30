@@ -1,8 +1,14 @@
 # Topbet — Interactive Vault Landing Page
 
-A mobile-first landing page built around a hold-to-scan vault interaction:
-the visitor presses and holds a biometric scanner, the vault unlocks, swings
-open, and reveals the welcome bonus above a registration form.
+A mobile-first landing page built around a vault-opening interaction. Copy is
+Uzbek; the layout follows the Figma file *Topbet-LP* (Dynamic 1 / 2 / 3).
+
+**Two CTAs open the vault**, and both land in the same place:
+
+1. **Hold the scanner** — press and hold the plate on the vault door itself.
+2. **SEYFNI OCHISH** — a plain button, for anyone who never tries a long press.
+
+The vault then swings open, reveals the amount, and hands off to registration.
 
 Static HTML/CSS/vanilla JS. No build step, no dependencies.
 
@@ -24,10 +30,10 @@ python3 -m http.server 8000
 
 | State       | Video               | Overlay                                          |
 | ----------- | ------------------- | ------------------------------------------------ |
-| `idle`      | idle clip, looping  | Headline + pulsing hold-to-scan target           |
+| `idle`      | idle clip, looping  | Offer card, scanner target, SEYFNI OCHISH        |
 | `scanning`  | idle clip continues | Plate outline fills over 1.6s; release resets it |
 | `unlocking` | opening clip        | "Access granted" badge, clears before the reveal |
-| `revealing` | opening clip frozen | Offer + 15-minute reservation countdown          |
+| `revealing` | opening clip frozen | SEYF OCHILDI + 10-minute reservation countdown   |
 | `register`  | frozen final frame  | Registration card                                |
 
 State lives in `data-state` on `<html>`, so CSS drives all visibility.
@@ -152,10 +158,19 @@ All user-facing text is in the `COPY` object at the top of `assets/js/app.js`.
 Add a locale and change `ACTIVE_LOCALE`; no markup changes needed. Nothing is
 baked into the video, which is what makes this cheap.
 
-Current copy is English placeholder. **The offer figures (`100% BONUS`,
-`+ 250 free spins`) are placeholders and must be replaced with the real
-licensed offer before this goes live**, along with the T&C, privacy and
-responsible-gambling links, which currently point at `#` anchors.
+Copy is Uzbek (`ACTIVE_LOCALE = 'uz'`), taken from the Figma file. The header
+carries a language control, but **it is presentation only — no second locale
+is wired up yet.**
+
+Open questions carried over from the design, all still placeholders:
+
+- The T&C, responsible-gambling and "Kirish" links point at `#` anchors.
+- The design's form showed Turkish leftovers from a template (`Türkiye (TR)`,
+  `Zaten bir hesabınız var mı? Giriş yap`, a `396-000-0000` mask). Those are
+  built here as Uzbek — UZ flag, `+998`, `Hisobingiz bormi? Kirish` — which is
+  an assumption worth confirming.
+- The design says *Sizda 10 daqiqa bor* ("you have 10 minutes") while its
+  timer reads `14:55`. The copy wins here: `LOCK_MINUTES = 10`.
 
 ## Brand
 
